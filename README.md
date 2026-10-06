@@ -51,6 +51,7 @@ sudo apt install tesseract-ocr tesseract-ocr-ita # to install the photo reader
 | 5 | git from the terminal | the guide uses `git diff` and `git restore` |
 | 6 | splitting single files | script `split-notes.py` and command `/split`, see below |
 | 7 | `// adatta //` | replaces `// 400 //`: full-width image |
+| 7b | layout of an image without a placeholder | the agent asks one `question` per image (resize / adatta / caption sotto / testo a lato / lascia com'è), text from the OCR if available |
 | 9 | images inside callouts | stay as `![[x.png|300]]` |
 | 10 | `→` in formulas | no conversion, no check |
 | 11 | only `// ... //` | `%% ... %%` removed everywhere |

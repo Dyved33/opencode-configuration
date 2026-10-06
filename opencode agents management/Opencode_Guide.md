@@ -124,14 +124,16 @@ The placeholder disappears once it has been carried out. If the agent can't, it 
 **Images.** After the image you indicate the layout:
 
 ```
-![[x.png]]                        resized to 300
+![[x.png]]                        no placeholder: the agent asks (resized to 300 if you don't care)
 ![[x.png]] // adatta //           fitted to the width of the page
 ![[x.png]] // sotto: testo //     with a caption underneath
 ![[x.png]] // lato: testo //      with text alongside
 ![[x.png]] // lato //             the paragraph that follows goes alongside
 ```
 
-Inside a callout the image stays `![[x.png|300]]`. The model cannot see the images: the text to put underneath or alongside is written by you.
+If you don't write a placeholder, the agent asks you which layout to use, one question per image, before laying it out. The text for the caption or for the text alongside comes from the OCR when it gives something usable; otherwise it asks you to write it, and if you don't it falls back to a resize.
+
+Inside a callout the image stays `![[x.png|300]]`. The model cannot see the images: it never describes what they show unless your text or the OCR does.
 
 **Todo.** `> [!todo] cosa va rivisto` marks a point to check. The agent tries to close them on every pass and leaves new ones when it is not sure about something. `/audit` lists them all.
 

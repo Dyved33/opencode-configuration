@@ -104,14 +104,28 @@ You cannot see the images: don't describe what they show unless the user's text 
 
 Exception: when the agent takes the photo itself with `pdftoppm` from a page of the material, the description is written from the text the OCR (`tesseract`) returns. In `src` goes only the file name, e.g. `slide-06.png`, without `images/` in front. Only what the OCR reads is reported: no invented details.
 
-Outside callouts every image uses one of these layouts. Which one to use is told by the placeholder the user writes after the image:
+Outside callouts every image uses one of these layouts. Which one to use is told by the placeholder the user writes after the image; without a placeholder it is the question below that decides:
 
 | The user writes | Layout |
 |---|---|
-| `![[x.png]]` | resized to 300 |
+| `![[x.png]]` (no placeholder) | ask first, see below; resized to 300 unless the user picks another layout |
 | `![[x.png]] // adatta //` | fitted to the width of the page |
 | `![[x.png]] // sotto: testo //` | with a caption underneath |
 | `![[x.png]] // lato: testo //` | with text alongside. With `// lato //` and no text, the paragraph that follows goes alongside |
+
+If the image has no placeholder, before writing the HTML ask the user which layout to use with the `question` tool, one question per image, in the order the images appear:
+
+- resized to 300
+- fitted to the width of the page
+- with a caption underneath
+- with text alongside
+- leave it as it is
+
+For "with a caption underneath" and "with text alongside" the text comes from the OCR when it gives something usable (`parse` with `extractImages: true` on an image of `images/`, `tesseract` on a slide photo). If the OCR gives nothing, ask the user to write the text in the same question; if they don't, fall back to a resize. Never invent what the image shows.
+
+Ask the same question for a photo you take yourself with `pdftoppm`, before inserting it: the layout is chosen then, with the same options.
+
+No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
 
 Resized:
 

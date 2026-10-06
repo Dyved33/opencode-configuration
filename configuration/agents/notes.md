@@ -27,7 +27,7 @@ You work on the lesson notes of this vault. The style rules are in `.opencode/st
 - fix mistakes by comparing against the material;
 - add what is missing compared to the material: a definition that was skipped, a step, a short example;
 - clarify sentences that don't make sense;
-- apply the layouts to the images and create the wikilinks to the other lessons of the course.
+- apply the layouts to the images: for each image without a placeholder, ask the user which layout to use (`.opencode/style.md`, section "Images"), one question per image; then create the wikilinks to the other lessons of the course.
 
 The user's text that is correct and clear stays exactly as it is, word for word. Everything that was in the note must still be there at the end.
 
@@ -38,6 +38,8 @@ The user's text that is correct and clear stays exactly as it is, word for word.
 **D. The user asks you to trim or review a note.** Remove what `.opencode/style.md` lists under "What not to write", shorten sentences, and where the same information is written identically twice keep the most complete version. Never remove information: definitions, theorems, proofs, formulas, code, images, examples, lists, numbers, edge cases, the teacher's observations all stay. Don't shorten an explanation that is needed to understand a difficult step. The goal is to remove words, not content, and not to reach a length. If the note is long work one `##` (or `###`) section at a time.
 
 In every case: if a piece of information isn't in the material you may look it up on the web, but keep it short and don't cite the source. If you are not sure about some content, don't invent it: leave a `[!todo]`.
+
+Every image you insert into the note, including a photo you take with `pdftoppm`, gets its layout from the question in `.opencode/style.md` (section "Images") before you write it: one question per image, no question if a placeholder is already there.
 
 The `parse` tool (opencode-parser plugin) is only for reading the text inside an image of `images/`, with `extractImages: true` and `ocrLang: "ita"`. Never use it with `save` or `outputPath`, and never use it for PDFs and slides: there you need the script, which reads one page at a time.
 
