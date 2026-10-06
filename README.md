@@ -1,7 +1,9 @@
 # Prerequisites
 
 npm install -g opencode-ai@latest #to install the latest version of opencode
+
 opencode plugin opencode-parser -g #to install the parser that lets you take photos of documents
+
 sudo apt install tesseract-ocr tesseract-ocr-ita # to install the photo reader
 
 ## What's here
