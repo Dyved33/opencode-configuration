@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "appunti",
-  "instructions": [".opencode/stile.md"],
+  "default_agent": "notes",
+  "instructions": [".opencode/style.md"],
   "permission": {
     "external_directory": {
       "*": "deny"
@@ -20,10 +20,10 @@
     "bash": {
       "*": "deny",
       "python3 .opencode/scripts/vault-audit.py*": "allow",
-      "python3 .opencode/scripts/leggi-slide.py*": "allow",
-      "python3 .opencode/scripts/controlla-perdite.py*": "allow",
-      "python3 .opencode/scripts/dividi-appunti.py*": "allow",
-      "python3 .opencode/scripts/dividi-appunti.py*--scrivi*": "ask",
+      "python3 .opencode/scripts/read-slides.py*": "allow",
+      "python3 .opencode/scripts/check-losses.py*": "allow",
+      "python3 .opencode/scripts/split-notes.py*": "allow",
+      "python3 .opencode/scripts/split-notes.py*--write*": "ask",
       "pdfinfo*": "allow",
       "pdftotext*": "allow",
       "pdftoppm*": "ask",
