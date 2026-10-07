@@ -11,6 +11,9 @@ Usage:
 What it looks for in the source and no longer finds in the note: formulas, lines of
 code, images, numbers, and the lines (or slides) it can't find.
 
+Text files linked from the note by a wikilink (for example the code in esercizi/)
+count as part of the note: they are read and compared too.
+
 It is a check on words, not on meaning: every item is "to check", not a certain error.
 A sentence rewritten in other words can be reported; a reported sentence must be
 reread in the source and, if the information really is missing, put back in the note.
@@ -89,6 +92,31 @@ def images(text):
     names = set(re.findall(r"!\[\[([^\]\|#\n]+)", text))
     names |= set(re.findall(r"<img\b[^>]*?\bsrc\s*=\s*[\"']([^\"']+)[\"']", text, re.I))
     return {os.path.basename(n.strip()).lower() for n in names}
+
+
+LINK_RE = re.compile(r"(?<!\!)\[\[([^\]\|#\n]+\.[A-Za-z0-9]+)(?:#[^\]\|\n]*)?(?:\|[^\]\n]*)?\]\]")
+TEXT_EXTENSIONS = {
+    ".py", ".c", ".h", ".cpp", ".cc", ".java", ".js", ".ts", ".html", ".css", ".sql",
+    ".sh", ".r", ".tex", ".xml", ".json", ".yml", ".yaml", ".php", ".rb", ".go", ".rs",
+    ".kt", ".swift", ".hs", ".ml", ".scala", ".asm", ".pl", ".txt",
+}
+
+
+def attachments(note_text, folder):
+    """Text of the files linked from the note (code in esercizi/): they count as part of the note."""
+    pieces = []
+    for target in LINK_RE.findall(note_text):
+        if os.path.splitext(target)[1].lower() not in TEXT_EXTENSIONS:
+            continue
+        path = os.path.join(folder, target.strip())
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                pieces.append(f.read())
+        except (OSError, UnicodeDecodeError):
+            continue
+    return "".join(f"\n```\n{p}\n```\n" for p in pieces)
 
 
 def clean_markdown(line):
@@ -232,16 +260,18 @@ def main():
         print(f"Copy saved: {len(note_text.split())} words, {note_text.count(chr(10)) + 1} lines.")
         return
 
+    extended = note_text + attachments(note_text, os.path.dirname(os.path.abspath(note)) or ".")
+
     if with_source:
         if not os.path.isfile(with_source):
             fail(f"file not found: {with_source}")
         ext = os.path.splitext(with_source)[1].lower()
         print(f"Comparison: {os.path.basename(note)}  <-  {os.path.basename(with_source)}")
         if ext in (".pdf", ".pptx", ".ppt"):
-            total = compare_slides(material_pages(with_source), note_text)
+            total = compare_slides(material_pages(with_source), extended)
         else:
             with open(with_source, encoding="utf-8", errors="replace") as f:
-                total = compare_text(f.read(), note_text, "raw notes")
+                total = compare_text(f.read(), extended, "raw notes")
     else:
         if os.path.isfile(copy):
             with open(copy, encoding="utf-8") as f:
@@ -256,7 +286,7 @@ def main():
         before, after = len(source.split()), len(note_text.split())
         print(f"Comparison: {os.path.basename(note)}  <-  {origin}")
         print(f"Words: {before} -> {after} ({(after - before) / max(before, 1) * 100:+.0f}%)")
-        total = compare_text(source, note_text, "text")
+        total = compare_text(source, extended, "text")
 
     if total == 0:
         print("\nNo loss detected.")

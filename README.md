@@ -41,7 +41,9 @@ sudo apt install tesseract-ocr tesseract-ocr-ita # to install the photo reader
 
 **Removed:** the tag table, years and Erasmus, frontmatter, navigation footer, `raw_notes/`, `attachments/`, `NN_` numbering, the ban on non-ASCII characters, `[!NOTE]` and `[!LAW]` callouts, the example templates from the old prompts.
 
-**Permissions.** The agent cannot edit `AGENTS.md` or `.opencode/`. Removed `find`, `head`, `tail`, `sed`, `unzip`, `file`. `pdftoppm` (creates images) and `split-notes.py --write` (creates notes) ask for confirmation.
+**`esercizi/` is yours.** The `esercizi/` folder of every course holds the code you write (`.py`, `.html`, `.sql`, subfolders for the exam). It is an input just like the slides: the agent reads it in order to link it from the notes, but it doesn't modify it and it doesn't run code. If you ask for an exercise, it gives it to you in the answer and you save it. `vault-audit.py` skips the folder (the `.md` files in it are not notes) and `check-losses.py` reads the files linked from the note, so code moved into `esercizi/` doesn't show up as lost.
+
+**Permissions.** The agent cannot edit `AGENTS.md`, `.opencode/` or anything inside `esercizi/` (`"*/esercizi/*": "deny"`, placed after `*.md` so that the last matching rule wins). Removed `find`, `head`, `tail`, `sed`, `unzip`, `file`. `pdftoppm` (creates images) and `split-notes.py --write` (creates notes) ask for confirmation.
 
 ## Implementation details
 

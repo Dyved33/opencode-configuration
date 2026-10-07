@@ -16,7 +16,7 @@ import sys
 
 ALLOWED_CALLOUTS = {"example", "info", "important", "warning", "tip", "todo"}
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"}
-EXCLUDED_DIRS = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images"}
+EXCLUDED_DIRS = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images", "esercizi"}
 EXCLUDED_FILES = {"AGENTS.md", "Opencode_Guide.md", "chat_prompt.md", "README.md", "LEGGIMI.md"}
 LONG_PARAGRAPH = 150  # words
 

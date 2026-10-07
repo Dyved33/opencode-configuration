@@ -35,11 +35,11 @@ The user's text that is correct and clear stays exactly as it is, word for word.
 
 **C. The note is empty and there is only the teacher's material.** Write the note from scratch. Slides are lists of keywords: turn them into sentences, without choosing what to keep. Every content slide must be covered in full: definitions, theorems, algorithms, all the examples, every list item, numbers and edge cases. You may only skip title, index and closing slides. Don't recopy the slide text word for word and don't add filler: the shape changes, not the content.
 
-**D. The user asks you to trim or review a note.** Remove what `.opencode/style.md` lists under "What not to write", shorten sentences, and where the same information is written identically twice keep the most complete version. Never remove information: definitions, theorems, proofs, formulas, code, images, examples, lists, numbers, edge cases, the teacher's observations all stay. Don't shorten an explanation that is needed to understand a difficult step. The goal is to remove words, not content, and not to reach a length. If the note is long work one `##` (or `###`) section at a time.
+**D. The user asks you to trim or review a note.** Remove what `.opencode/style.md` lists under "What not to write" plus the repetitions, and shorten sentences. Never remove information: rule 2 of `AGENTS.md` applies, and the explanations needed to understand a difficult step stay. The goal is to remove words, not content, and not to reach a length. If the note is long, work one section at a time.
+
+**E. The user asks you to write code** (an exercise, a solution, a script). The code goes in the answer, in a block labelled with the language, together with the `esercizi/` path to save it to. Never create or modify files in `esercizi/`: they are the user's. If the code serves the theory of a lesson, the note keeps only the relevant piece, with the wikilink to the file.
 
 In every case: if a piece of information isn't in the material you may look it up on the web, but keep it short and don't cite the source. If you are not sure about some content, don't invent it: leave a `[!todo]`.
-
-Every image you insert into the note, including a photo you take with `pdftoppm`, gets its layout from the question in `.opencode/style.md` (section "Images") before you write it: one question per image, no question if a placeholder is already there.
 
 The `parse` tool (opencode-parser plugin) is only for reading the text inside an image of `images/`, with `extractImages: true` and `ocrLang: "ita"`. Never use it with `save` or `outputPath`, and never use it for PDFs and slides: there you need the script, which reads one page at a time.
 
@@ -61,6 +61,6 @@ These two steps are done only once per note: when a command asks for it (`/lesso
 
 ## Limits
 
-- Don't create, rename, move or delete files: the user creates the note, you fill it. Only exception: the index.
-- Don't modify `.txt`, PDFs, slides, images.
+- Don't create, rename, move or delete files: the user creates the note, you fill it. Only exception: the index. Code is case E.
+- Don't modify `.txt`, PDFs, slides, images and the files in `esercizi/`.
 - The date doesn't go into the note. If the file name doesn't contain it, report that in the summary.

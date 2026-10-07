@@ -6,9 +6,9 @@ Single source for the style. It applies to every lesson note. If a rule here and
 
 These are notes from a student who understood the lesson, not a handout. They are meant for studying for the exam, where what the teacher said has to be reproduced.
 
-That is why content is never lost. Everything in the user's notes, in the raw notes and in the teacher's material stays in the note: definitions, theorems, proofs, formulas, code, images, but also examples, complete lists, numbers, edge cases, observations and clarifications made out loud. You don't decide what is secondary. Your job is to fix the shape, correct mistakes and add what is missing.
+That is why content is never lost: everything in the user's notes, in the raw notes and in the teacher's material stays in the note — definitions, theorems, proofs, formulas, code, images, examples, complete lists, numbers, edge cases, observations and clarifications made out loud. You don't decide what is secondary: your job is to fix the shape, correct mistakes and add what is missing.
 
-Only words that carry no information are removed. If dropping a sentence loses no information, the sentence goes; if even a single detail is lost, the sentence stays and at most gets shortened. When in doubt, keep it.
+Only words that carry no information are removed: if dropping a sentence loses even a single detail, the sentence stays and at most gets shortened. When in doubt, keep it.
 
 Length has no limit: the content decides it. A long lesson or a difficult concept produce a long note, and that is right. What matters is density:
 
@@ -16,8 +16,6 @@ Length has no limit: the content decides it. A long lesson or a difficult concep
 - a difficult concept deserves all the explanation needed to understand it; a simple one gets a line;
 - the teacher's examples and the user's examples all stay; you add at most one of your own per concept, and only if it helps;
 - if a paragraph can be said in half the words without losing information, it must be said in half the words.
-
-To shorten, you remove words, never content.
 
 Three kinds of text, and only these:
 
@@ -93,6 +91,7 @@ A callout does not repeat the text preceding it. `[!info] Sintesi:` is reserved 
 - `$...$` in the text. `$$...$$` on their own lines for long formulas or ones that deserve emphasis.
 - In formulas follow the notation already used in the note and by the teacher. Do not convert existing formulas.
 - Code and pseudocode always in a ``` ``` ``` block. The label after the three backticks is whatever the user put: the language (`c`, `java`) or a name (`Algoritmo_di_Dekker`). Don't change it. In new blocks put the language if it is real code, otherwise a name without spaces.
+- The snippet that serves the theory stays in the note. The whole exercise or the complete solution does not: they go in `esercizi/<name>.<ext>`, in the course folder, and the note keeps only the relevant piece with the wikilink `[[esercizi/es3.py|es3]]`.
 - Function and variable names in the text in single backticks: `` `fork()` ``.
 - Tables only for comparisons with at least two columns of data.
 
@@ -113,7 +112,7 @@ Outside callouts every image uses one of these layouts. Which one to use is told
 | `![[x.png]] // sotto: testo //` | with a caption underneath |
 | `![[x.png]] // lato: testo //` | with text alongside. With `// lato //` and no text, the paragraph that follows goes alongside |
 
-If the image has no placeholder, before writing the HTML ask the user which layout to use with the `question` tool, one question per image, in the order the images appear:
+If the image has no placeholder — or if you are inserting it yourself with `pdftoppm` — ask which layout to use with the `question` tool, one question per image, in the order the images appear. No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
 
 - resized to 300
 - fitted to the width of the page
@@ -122,10 +121,6 @@ If the image has no placeholder, before writing the HTML ask the user which layo
 - leave it as it is
 
 For "with a caption underneath" and "with text alongside" the text comes from the OCR when it gives something usable (`parse` with `extractImages: true` on an image of `images/`, `tesseract` on a slide photo). If the OCR gives nothing, ask the user to write the text in the same question; if they don't, fall back to a resize. Never invent what the image shows.
-
-Ask the same question for a photo you take yourself with `pdftoppm`, before inserting it: the layout is chosen then, with the same options.
-
-No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
 
 Resized:
 
@@ -167,7 +162,7 @@ With text alongside:
 
 Inside a `<div>` Markdown doesn't work: italics with `<i>`, bold with `<b>`, no `$...$`. If the text alongside has formulas, use the resized layout and put the text underneath, outside the div.
 
-Inside a callout the image stays `![[x.png|300]]`. Images already inside a `<div>` are left alone.
+Inside a callout the image stays `![[x.png|300]]`.
 
 ## User placeholders
 

@@ -41,7 +41,8 @@ Rules:
 - follow style.md to the letter; if my notes and style.md say different things, my notes win;
 - in the exam I have to reproduce what the teacher said: everything in my notes and in the material must stay in the note. You may fix the shape, correct and add; you may only remove words that carry no information. When in doubt, keep it;
 - if you are not sure about some content don't invent it: leave > [!todo] with what is missing;
-- the image file names must be copied identically.
+- the image file names must be copied identically;
+- code that serves the theory stays in the note in a block; an exercise or a complete solution goes in a separate block with the esercizi/ path to save it to.
 
 Reply only with the note in a markdown block, followed by a summary of at most 5 lines: what you added, corrected, removed, and the todos you left.
 

@@ -22,6 +22,7 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 | `.opencode/scripts/` | the 4 scripts: slide reading, structural check, loss check, splitting of single files |
 | `opencode.json` | permissions |
 | `chat_prompt.md` | prompts to use outside OpenCode (Antigravity, web chat) |
+| `<Course>/esercizi/` | the code you write (input): the agent doesn't touch it |
 
 To change the note style you edit only `.opencode/style.md`.
 
@@ -34,15 +35,13 @@ To change the note style you edit only `.opencode/style.md`.
 
 ## Nothing is lost
 
-In the exam what the teacher said has to be reproduced, so the rule is: everything in your notes, in the raw notes and in the slides stays in the note. The agent may fix the shape, correct and add; it may only remove words (fillers, the same information written twice).
-
-A written rule, though, is not a guarantee, because a model can make mistakes. That is why there is a check done by a script, not by the model:
+The rule is rule 2 of `AGENTS.md`: everything in your notes, in the raw notes and in the slides stays in the note; the agent only removes words. A written rule, though, is not enough, because a model can make mistakes: that is why the check is done by a script.
 
 1. before editing a note the agent saves a copy of it in `.opencode/originals/`;
-2. at the end `check-losses.py` compares the note against the copy, the raw notes and the slides, and lists what it can no longer find: formulas, lines of code, images, numbers, lines of text, slide pages;
+2. at the end `check-losses.py` compares the note against the copy, the raw notes and the slides, and lists what it can no longer find: formulas, lines of code, images, numbers, lines of text, slide pages. The code linked from the note by a wikilink (in `esercizi/`) counts as part of the note too;
 3. for every item the agent rereads the source and puts back what is missing.
 
-The script compares words, not meanings: a well-rewritten sentence can be reported, and a sentence twisted while keeping the same words cannot. Slides made only of images cannot be checked. After `/review` it is therefore worth running it by hand too, and looking at `git diff` on the important notes.
+The script compares words, not meanings, and cannot check slides made only of images: after `/review` it is worth running it by hand and looking at `git diff` on the important notes.
 
 ## The agents
 
@@ -131,7 +130,7 @@ The placeholder disappears once it has been carried out. If the agent can't, it 
 ![[x.png]] // lato //             the paragraph that follows goes alongside
 ```
 
-If you don't write a placeholder, the agent asks you which layout to use, one question per image, before laying it out. The text for the caption or for the text alongside comes from the OCR when it gives something usable; otherwise it asks you to write it, and if you don't it falls back to a resize.
+If you don't write a placeholder, the agent asks you which layout to use, one question per image. The text for the caption or for the text alongside comes from the OCR or the agent asks you for it, and if you don't write it, it falls back to a resize.
 
 Inside a callout the image stays `![[x.png|300]]`. The model cannot see the images: it never describes what they show unless your text or the OCR does.
 
@@ -139,11 +138,13 @@ Inside a callout the image stays `![[x.png|300]]`. The model cannot see the imag
 
 **Sintesi.** Every note ends with `> [!info] Sintesi:`, 3 to 6 points. It is written by the agent with `/lesson` and `/review`.
 
+**Code.** The snippet that serves the theory stays in the note, in a ```` ``` ```` block. The exercises and the complete solutions live in `esercizi/`, with the name you choose: the note keeps only the relevant piece with the wikilink `[[esercizi/es3.py|es3]]`. The files in `esercizi/` are yours: the agent never opens them for writing, and if you ask for an exercise it gives it to you in the answer and you save it.
+
 ## What OpenCode can and can't do
 
-- It writes only `.md` files. It cannot modify `AGENTS.md` or the files in `.opencode/`.
+- It writes only `.md` files. It cannot modify `AGENTS.md`, the files in `.opencode/` or anything in `esercizi/`.
 - It doesn't create notes: you create them and it fills them. It can only create the course index. The only exception is `/split`, which asks for confirmation.
-- It doesn't touch `.txt`, PDFs, slides and images.
+- It doesn't touch `.txt`, PDFs, slides, images and the files in `esercizi/`. It doesn't run code.
 - It doesn't leave the vault.
 - In the terminal it can only run the four scripts, `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext` and the read-only git commands. For `pdftoppm` (which creates images) it asks for confirmation.
 - It can search the web.
