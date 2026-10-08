@@ -8,6 +8,7 @@
     },
     "edit": {
       "*": "allow",
+      "*.md": "allow",
       "AGENTS.md": "deny",
       "opencode.json": "deny",
       "Opencode_Guide.md": "deny",
