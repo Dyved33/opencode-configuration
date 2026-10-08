@@ -1,0 +1,60 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "webdev",
+  "instructions": [".opencode/style.md"],
+  "permission": {
+    "external_directory": {
+      "*": "deny"
+    },
+    "edit": {
+      "*": "allow",
+      "AGENTS.md": "deny",
+      "opencode.json": "deny",
+      "Opencode_Guide.md": "deny",
+      ".opencode/*": "deny"
+    },
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "id_rsa*": "deny"
+    },
+    "bash": {
+      "*": "allow",
+      "rm *": "ask",
+      "sudo *": "deny",
+      "git commit*": "ask",
+      "git push*": "ask",
+      "git reset*": "ask",
+      "git clean*": "ask",
+      "git restore*": "ask",
+      "git rebase*": "ask",
+      "*deploy*": "deny",
+      "npm publish*": "deny",
+      "pnpm publish*": "deny",
+      "yarn publish*": "deny",
+      "vercel*": "deny",
+      "netlify*": "deny",
+      "wrangler*": "deny",
+      "flyctl*": "deny",
+      "heroku*": "deny",
+      "kubectl*": "deny",
+      "docker push*": "deny",
+      "gh release*": "deny"
+    },
+    "webfetch": "allow",
+    "websearch": "allow",
+    "task": "allow",
+    "question": "allow",
+    "todowrite": "allow"
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp"],
+      "enabled": true
+    }
+  }
+}

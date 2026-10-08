@@ -1,75 +1,192 @@
-# Prerequisites
+# opencode-configuration
 
-npm install -g opencode-ai@latest #to install the latest version of opencode
+Two OpenCode configurations, each one a complete payload: copy the whole folder
+into the target directory, start OpenCode, and it works.
 
-opencode plugin opencode-parser -g #to install the parser that lets you take photos of documents
-
-sudo apt install tesseract-ocr tesseract-ocr-ita # to install the photo reader
-
-## What's here
-
-| File | Replaces | Notes |
+| Folder | Copy it into | What it is for |
 |---|---|---|
-| `AGENTS.md` | `AGENTS.md` | from 84 to 38 lines: structure, 9 rules, tools |
-| `.opencode/style.md` | the two prompts and `div style.txt` | single source for the style, loaded at every session |
-| `.opencode/agents/notes.md` | `vault`, `appunti`, `materiale`, `indici` | one agent that writes |
-| `.opencode/agents/reviewer.md` | `reviewer` | checks correctness and verbosity, never edits |
-| `.opencode/commands/` | the 4 commands | `/lesson`, `/review`, `/audit`, `/slide`, plus `/split` |
-| `.opencode/scripts/vault-audit.py` | the old script | rewritten: no tags, no frontmatter, no yearly indexes |
-| `.opencode/scripts/read-slides.py` | the `reader` agent | reads PDF, PPTX and PPT one page at a time |
-| `.opencode/scripts/split-notes.py` | new | splits a single file into one note per lesson |
-| `.opencode/scripts/check-losses.py` | new | verifies that nothing was lost from the note compared to the source |
-| `opencode.json` | `opencode.json` | updated permissions |
-| `Opencode_Guide.md` | `Opencode_Guide.md` | rewritten around the new structure |
-| `chat_prompt.md` | `prompt_appunti.md`, `prompt_materiale.md` | short prompts for Antigravity and web chat |
+| `notes/` | your Obsidian vault of university notes | one note = one lesson: writing, integrating, reviewing |
+| `web/` | a web project (portals and websites) | writing and reviewing code: C# + React today, adaptable |
 
-## The choices, and why
+Both carry `AGENTS.md` and `opencode.json` at the top and everything else under
+`.opencode/`, which is where OpenCode looks for agents, commands, skills and
+instructions. No file inside them needs editing before the first run.
 
-**The style comes from your own notes.** The first sections of both files ("Compilatori e interpreti", "Evoluzione hardware e multiprogrammazione") have Every Word Capitalised, `[!NOTE] Nota del Prof`, bold everywhere, titles like "Il Motore dell'Infinito": that is the AI style you want to avoid. Further on the style changes: `*Definition:*`, `**Topic:**` labels at the start of a paragraph, `-` lists, glosses with ` = `, `<u>` for the key sentence, callouts in lowercase. `style.md` encodes this second style and lists the first one among the things not to do. You neither confirmed nor corrected it for me: if I read it wrong, `style.md` is the file to change.
+## Prerequisites
 
-**Nothing the teacher said is ever lost.** That is rule 2 of `AGENTS.md` and the opening of `style.md`: the agent fixes the shape, corrects and adds; it only removes words. In the first version the rule protected only a few categories (definitions, theorems, formulas) and for slides it said "one example per concept, skip the filler slides": it left the choice of what was secondary to the model. Now it doesn't. On top of that there is `check-losses.py`: the agent saves a copy before editing and at the end the script lists formulas, code, images, numbers, lines and slide pages it can no longer find. It is a word-by-word comparison, so it lowers the risk without eliminating it: on important notes it is still worth looking at `git diff`.
+Both configurations:
 
-**Two agents instead of six.** With a free model every subagent is a new session that has to reread everything. I kept only the separation that matters: who writes and who checks. The reviewer works in a clean context, so it is not influenced by what the other one just wrote. `vault`, `materiale` and `indici` became cases inside `notes`. `lettore` became a script.
+```bash
+npm install -g opencode-ai@latest    # latest version of opencode
+python3 --version                    # the scripts are python3
+```
 
-**The reviewer runs once, when the lesson is finished.** It is started by `/lesson` and by `/review`. After any edit the agent only updates the index and runs the structural check.
+Notes configuration only:
 
-**`/review` edits.** It has the note reviewed and applies the changes. With `report only` it touches nothing. Fixed rule: it never removes definitions, theorems, proofs, formulas, code, examples, images.
+```bash
+opencode plugin opencode-parser -g   # the parser that reads photos of documents
+sudo apt install tesseract-ocr tesseract-ocr-ita   # photo reader
+sudo apt install poppler-utils       # pdftoppm / pdftotext for PDFs
+```
 
-**Splitting the old files is done by a script, not by the model.** A model that recopies 180 KB of notes into 20 files will lose pieces of them. `split-notes.py` copies the text verbatim; the model steps in afterwards, with `/review`, one note at a time.
+## Install
 
-**`style.md` is always loaded** (the `instructions` field of `opencode.json`): a weak model sometimes skips reading, and the style is exactly the part that must not be skipped.
+With the script (it never overwrites an existing file unless you pass `--force`,
+and with `--force` it backs everything up first):
 
-**Removed:** the tag table, years and Erasmus, frontmatter, navigation footer, `raw_notes/`, `attachments/`, `NN_` numbering, the ban on non-ASCII characters, `[!NOTE]` and `[!LAW]` callouts, the example templates from the old prompts.
+```bash
+./install.sh notes "/path/to/vault"
+./install.sh web   "/path/to/project"
+./install.sh notes "/path/to/vault" --force    # replace what is already there
+```
 
-**`esercizi/` is yours.** The `esercizi/` folder of every course holds the code you write (`.py`, `.html`, `.sql`, subfolders for the exam). It is an input just like the slides: the agent reads it in order to link it from the notes, but it doesn't modify it and it doesn't run code. If you ask for an exercise, it gives it to you in the answer and you save it. `vault-audit.py` skips the folder (the `.md` files in it are not notes) and `check-losses.py` reads the files linked from the note, so code moved into `esercizi/` doesn't show up as lost.
+By hand, the same thing:
 
-**Permissions.** The agent cannot edit `AGENTS.md`, `.opencode/` or anything inside `esercizi/` (`"*/esercizi/*": "deny"`, placed after `*.md` so that the last matching rule wins). Removed `find`, `head`, `tail`, `sed`, `unzip`, `file`. `pdftoppm` (creates images) and `split-notes.py --write` (creates notes) ask for confirmation.
+```bash
+cp -r notes/. "/path/to/vault/"
+cp -r web/.   "/path/to/project/"
+```
 
-## Implementation details
+Then start OpenCode from the target folder. After any change to `opencode.json`
+or to a file in `.opencode/` it has to be restarted: the configuration is read
+only at startup.
+
+To check what OpenCode actually loaded:
+
+```bash
+opencode debug config
+```
+
+If a configuration is broken and OpenCode refuses to start:
+`OPENCODE_DISABLE_PROJECT_CONFIG=1 opencode`, fix the file and restart.
+
+## `notes/` — what is inside
+
+| Repo path | Installed path | What it is |
+|---|---|---|
+| `notes/AGENTS.md` | `AGENTS.md` | structure, 9 rules, tools table (read every session) |
+| `notes/opencode.json` | `opencode.json` | permissions: markdown only, no leaving the vault, no code execution |
+| `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
+| `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
+| `notes/.opencode/agents/reviewer.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
+| `notes/.opencode/commands/` | `.opencode/commands/` | `/lesson`, `/review`, `/audit`, `/slide`, `/split` |
+| `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader, structural audit, loss check, splitter |
+| `notes/Opencode_Guide.md` | `Opencode_Guide.md` | guide for the user, with examples and troubleshooting |
+| `notes/chat_prompt.md` | `chat_prompt.md` | short prompts for Antigravity and web chat |
+| `notes/.gitignore` | `.gitignore` | lines merged into yours, never replacing them |
+
+## `web/` — what is inside
+
+| Repo path | Installed path | What it is |
+|---|---|---|
+| `web/AGENTS.md` | `AGENTS.md` | structure, 9 rules, tools table (read every session) |
+| `web/opencode.json` | `opencode.json` | permissions, no leaving the project, no deploy, Playwright MCP |
+| `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
+| `web/.opencode/agents/webdev.md` | `.opencode/agents/` | the agent that writes code (`default_agent`) |
+| `web/.opencode/agents/reviewer.md` | `.opencode/agents/` | reviews a change without touching it |
+| `web/.opencode/commands/` | `.opencode/commands/` | `/page`, `/review`, `/audit`, `/preview` |
+| `web/Opencode_Guide.md` | `Opencode_Guide.md` | guide for the user |
+
+The web configuration assumes nothing about the stack: the agent reads
+`package.json` and the files around the change first. Today that means C# in the
+backend and React in the frontend; when the stack changes, `.opencode/style.md`
+is the only file to update.
+
+What it is allowed to do: create and change any file of the project, run
+`npm`/`node`/`dotnet`/`git` and the usual tools, search the web, open the page in
+a browser. What it is not: leave the project, deploy or publish anything
+(blocked), delete files or run `git reset` (asks for confirmation), commit or
+push (only when you ask for it in that message, and then it asks for
+confirmation).
+
+## The choices, and why (notes)
+
+**The style comes from your own notes.** The first sections of both files
+("Compilatori e interpreti", "Evoluzione hardware e multiprogrammazione") have
+Every Word Capitalised, `[!NOTE] Nota del Prof`, bold everywhere, titles like "Il
+Motore dell'Infinito": that is the AI style you want to avoid. Further on the
+style changes: `*Definition:*`, `**Topic:**` labels at the start of a paragraph,
+`-` lists, glosses with ` = `, `<u>` for the key sentence, callouts in lowercase.
+`style.md` encodes this second style and lists the first one among the things not
+to do. If it was read wrong, `style.md` is the file to change.
+
+**Nothing the teacher said is ever lost.** That is rule 2 of `AGENTS.md` and the
+opening of `style.md`: the agent fixes the shape, corrects and adds; it only
+removes words. On top of the rule there is `check-losses.py`: the agent saves a
+copy before editing and at the end the script lists formulas, code, images,
+numbers, lines and slide pages it can no longer find. It is a word-by-word
+comparison, so it lowers the risk without eliminating it: on important notes it is
+still worth looking at `git diff`.
+
+**Two agents instead of six.** With a free model every subagent is a new session
+that has to reread everything. I kept only the separation that matters: who writes
+and who checks. The reviewer works in a clean context, so it is not influenced by
+what the other one just wrote.
+
+**The reviewer runs once, when the lesson is finished.** It is started by
+`/lesson` and by `/review`. After any edit the agent only updates the index and
+runs the structural check.
+
+**`style.md` is always loaded** (the `instructions` field of `opencode.json`): a
+weak model sometimes skips reading, and the style is exactly the part that must
+not be skipped.
+
+**Splitting the old files is done by a script, not by the model.** A model that
+recopies 180 KB of notes into 20 files will lose pieces of them. `split-notes.py`
+copies the text verbatim; the model steps in afterwards, with `/review`, one note
+at a time.
+
+**Permissions.** The agent cannot edit `AGENTS.md`, `opencode.json`, the guide,
+`.opencode/` or anything inside `esercizi/` (`"*/esercizi/*": "deny"`, placed
+after `*.md` so that the last matching rule wins). `pdftoppm` (creates images) and
+`split-notes.py --write` (creates notes) ask for confirmation. Both
+configurations set `"external_directory": {"*": "deny"}`: the agent never leaves
+the folder it was started in.
+
+**`esercizi/` is yours.** The `esercizi/` folder of every course holds the code
+you write (`.py`, `.html`, `.sql`). It is an input just like the slides: the agent
+reads it to link it from the notes, but it doesn't modify it and it doesn't run
+code.
+
+## Implementation details (notes)
 
 | 1 | date only in the file name | the `#` title has no date; the audit reports files without a date in the name; suggested format `2026-05-07 Automi a pila.md` |
 | 2 | index and modules | `00 Index - <Course>.md` in every course or module folder |
 | 4 | one `.txt` per lesson | the agent looks for the `.txt` with the same name or the same date as the note, otherwise it asks |
 | 5 | git from the terminal | the guide uses `git diff` and `git restore` |
-| 6 | splitting single files | script `split-notes.py` and command `/split`, see below |
+| 6 | splitting single files | script `split-notes.py` and command `/split` |
 | 7 | `// adatta //` | replaces `// 400 //`: full-width image |
 | 7b | layout of an image without a placeholder | the agent asks one `question` per image (resize / adatta / caption sotto / testo a lato / lascia com'è), text from the OCR if available |
-| 9 | images inside callouts | stay as `![[x.png|300]]` |
+| 9 | images inside callouts | stay as `![[x.png\|300]]` |
 | 10 | `→` in formulas | no conversion, no check |
 | 11 | only `// ... //` | `%% ... %%` removed everywhere |
 | 12 | em dash, web sources | INFO only in the audit; no source is cited |
 | 13 | summary at the end of the lesson | every note ends with `> [!info] Sintesi:` (3-6 points); the audit reports it if missing |
-| 14 | length | no line limit: `style.md` asks for density (each concept once, explanation proportioned to the difficulty, cut words and not content). The audit does not report the length of the note, only single paragraphs over 150 words, as INFO |
+| 14 | length | no line limit: `style.md` asks for density. The audit reports single paragraphs over 150 words, as INFO |
 | 15 | configuration and file creation | the agent does not change the configuration and does not create notes |
 | 16 | reviewer | one pass, only with `/lesson` and `/review` |
 
 ## Converting old notes to the new format (from a single file to multiple files)
 
-Note that with a multi-agent system it is convenient to have smaller files (it also saves a fair amount of tokens)
+`/split "path/Notes course.md"` shows the plan and only writes after
+confirmation. The script cuts on the `###` headings, derives the date of each
+section from the name of its first image and joins consecutive sections that
+share the same date. The dates come from the screenshots, so they are
+approximate: fix them by renaming the file from Obsidian. Then `/review` one note
+at a time: it trims, adds the summary and reports the word count before and
+after. Make a commit before you start.
 
-`/split "path/Notes course.md"` shows the plan and only writes after confirmation. The script cuts on the `###` headings, derives the date of each section from the name of its first image and joins consecutive sections that share the same date. On your two files the plan is this:
+Note that with a multi-agent system it is convenient to have smaller files (it
+also saves a fair amount of tokens).
 
-- **SO:** 23 sections become 14 notes. One has no date ("Evoluzione hardware e multiprogrammazione").
-- **Linguaggi:** 26 sections become 23 notes. The first 6 sections have no images and stay dateless, each in its own file: they are short (8 to 105 lines), better to merge them by hand into one or two lessons.
+## Repository layout
 
-The dates come from the screenshots, so they are approximate: in Linguaggi some are out of order (for example "Analisi lessicale" 11/04 before "Grammatiche regolari" 09/04). Fix them by renaming the file from Obsidian. Then `/review` one note at a time: it trims, adds the summary and reports the word count before and after. Make a commit before you start.
+```
+README.md      this file
+install.sh     copies notes/ or web/ into a target folder, with backup
+notes/         complete payload for the notes vault
+web/           complete payload for a web project
+```
+
+Nothing else: the two payloads are self-contained, and each one is exactly what
+must end up in the target folder.

@@ -11,6 +11,9 @@
       "*.md": "allow",
       "*/esercizi/*": "deny",
       "AGENTS.md": "deny",
+      "Opencode_Guide.md": "deny",
+      "chat_prompt.md": "deny",
+      "opencode.json": "deny",
       ".opencode/*": "deny"
     },
     "read": {
