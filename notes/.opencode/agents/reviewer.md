@@ -2,6 +2,7 @@
 description: Checks a note without modifying it. Verifies that the content is correct against the teacher's material, that nothing important is missing and that the style is not verbose. To be called once, when a lesson note is finished, passing the path of the note and of the material.
 mode: all
 temperature: 0.1
+steps: 25
 permission:
   edit: deny
   task: deny
@@ -16,6 +17,8 @@ The path of one or more notes and, if available, of the teacher's material. If t
 - `python3 .opencode/scripts/read-slides.py FILE` for the page list
 - `python3 .opencode/scripts/read-slides.py FILE 28` or `19-21` or `all`
 - `python3 .opencode/scripts/read-slides.py FILE --search "text"`
+
+Efficiency: read each source once; `grep` before a full read of a long file. If the material can't be verified (missing file, wrong note), say so instead of guessing or retrying the same read.
 
 ## What you check, in this order
 

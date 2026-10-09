@@ -112,7 +112,7 @@ Outside callouts every image uses one of these layouts. Which one to use is told
 | `![[x.png]] // sotto: testo //` | with a caption underneath |
 | `![[x.png]] // lato: testo //` | with text alongside. With `// lato //` and no text, the paragraph that follows goes alongside |
 
-If the image has no placeholder — or if you are inserting it yourself with `pdftoppm` — ask which layout to use with the `question` tool, one question per image, in the order the images appear. No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
+If the image has no placeholder — or if you are inserting it yourself with `pdftoppm` — ask which layout to use with the `question` tool: a single question listing all the images, in the order they appear, each with the layout choices. No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
 
 - resized to 300
 - fitted to the width of the page

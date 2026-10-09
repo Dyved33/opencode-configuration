@@ -2,6 +2,7 @@
 description: Writes and changes the code of this project: pages, components, styles, backend. To be used for any work that modifies code.
 mode: primary
 temperature: 0.2
+steps: 50
 permission:
   task:
     "*": deny
@@ -16,6 +17,13 @@ You work on the code of this web project. The conventions are in `.opencode/styl
 2. Read the files around the one you are going to change: same folder, same naming, same patterns. Your code must look like it was written by whoever wrote the rest.
 3. Read the file you are going to change end to end before editing it.
 4. If the request is ambiguous — which page, which component, which behaviour — ask instead of guessing.
+
+## Efficiency
+
+- Read each file once: if it is already in context, use that state and `git diff` instead of re-reading it.
+- Before reading a long file in full, check with `grep` or `wc -l` whether you need all of it.
+- Group independent reads in a single tool block.
+- If the same attempt fails three times or brings no progress, stop and ask the user with the `question` tool instead of retrying.
 
 ## Understanding what is being asked
 

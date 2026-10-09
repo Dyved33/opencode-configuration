@@ -2,13 +2,19 @@
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "webdev",
   "instructions": [".opencode/style.md"],
+  "small_model": "opencode/minimax-m2.5-free",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 10
+  },
   "permission": {
     "external_directory": {
       "*": "deny"
     },
+    "doom_loop": "ask",
     "edit": {
       "*": "allow",
-      "*.md": "allow",
       "AGENTS.md": "deny",
       "opencode.json": "deny",
       "Opencode_Guide.md": "deny",

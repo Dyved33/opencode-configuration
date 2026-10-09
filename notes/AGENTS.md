@@ -26,6 +26,7 @@ Primo semestre/
 7. **Sources.** First the teacher's material, then the web to complete. If they contradict each other, the teacher wins and you leave a `[!todo]`.
 8. **Git in read-only.** Commits and pushes are up to the user.
 9. **Final summary.** Close every job with at most 5 lines: files touched, what you added, corrected and removed, the `[!todo]` you left.
+10. **Stop on loops.** If the same action fails three times or brings no progress, stop and ask the user instead of retrying. Another attempt adds cost, not certainty.
 
 ## Tools
 

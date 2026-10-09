@@ -64,7 +64,7 @@ If a configuration is broken and OpenCode refuses to start:
 
 | Repo path | Installed path | What it is |
 |---|---|---|
-| `notes/AGENTS.md` | `AGENTS.md` | structure, 9 rules, tools table (read every session) |
+| `notes/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
 | `notes/opencode.json` | `opencode.json` | permissions: markdown only, no leaving the vault, no code execution |
 | `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
 | `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
@@ -79,7 +79,7 @@ If a configuration is broken and OpenCode refuses to start:
 
 | Repo path | Installed path | What it is |
 |---|---|---|
-| `web/AGENTS.md` | `AGENTS.md` | structure, 9 rules, tools table (read every session) |
+| `web/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
 | `web/opencode.json` | `opencode.json` | permissions, no leaving the project, no deploy, Playwright MCP |
 | `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
 | `web/.opencode/agents/webdev.md` | `.opencode/agents/` | the agent that writes code (`default_agent`) |
@@ -98,6 +98,13 @@ a browser. What it is not: leave the project, deploy or publish anything
 (blocked), delete files or run `git reset` (asks for confirmation), commit or
 push (only when you ask for it in that message, and then it asks for
 confirmation).
+
+The web payload shares the resource-saving keys of the notes one: `small_model`,
+`compaction` (`auto`, `prune`, `tail_turns: 10`) and `permission.doom_loop: "ask"`.
+Unlike the notes config, `lsp` and `formatter` stay enabled and `bash` stays
+`allow` (npm, build, tests, Playwright); there are no `watcher` or Markdown-edit
+rules because it works on code. Both agents add an `## Efficiency` section and
+rule 10 ("No loops") tells the agent to stop and ask instead of retrying.
 
 ## The choices, and why (notes)
 
@@ -131,6 +138,19 @@ runs the structural check.
 weak model sometimes skips reading, and the style is exactly the part that must
 not be skipped.
 
+**Fewer tokens, less noise.** `small_model` (`opencode/minimax-m2.5-free`) answers
+titles, summaries and compaction, so the main model isn't spent on them.
+`compaction` (`auto`, `prune`, `tail_turns: 10`) keeps the conversation inside the
+window on its own. `lsp: false` and `formatter: false` are off because the vault
+is Markdown: no language servers, no formatting. `watcher.ignore` skips images,
+PDFs, slides, `.git` and `node_modules`, so file changes don't spam the session.
+`permission.doom_loop: "ask"` stops the agent when it repeats the same tool call
+three times.
+
+**Efficiency and loops.** Both agents carry a short `## Efficiency` section (read
+each file once, `grep` first, group reads) and rule 10 of `AGENTS.md` ("Stop on
+loops") tells the agent to stop and ask instead of retrying a failing action.
+
 **Splitting the old files is done by a script, not by the model.** A model that
 recopies 180 KB of notes into 20 files will lose pieces of them. `split-notes.py`
 copies the text verbatim; the model steps in afterwards, with `/review`, one note
@@ -156,7 +176,7 @@ code.
 | 5 | git from the terminal | the guide uses `git diff` and `git restore` |
 | 6 | splitting single files | script `split-notes.py` and command `/split` |
 | 7 | `// adatta //` | replaces `// 400 //`: full-width image |
-| 7b | layout of an image without a placeholder | the agent asks one `question` per image (resize / adatta / caption sotto / testo a lato / lascia com'è), text from the OCR if available |
+| 7b | layout of an image without a placeholder | the agent asks a single `question` listing all the images in order (resize / adatta / caption sotto / testo a lato / lascia com'è), text from the OCR if available |
 | 9 | images inside callouts | stay as `![[x.png\|300]]` |
 | 10 | `→` in formulas | no conversion, no check |
 | 11 | only `// ... //` | `%% ... %%` removed everywhere |

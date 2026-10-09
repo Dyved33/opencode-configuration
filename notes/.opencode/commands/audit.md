@@ -4,7 +4,7 @@ description: Structural check of a note, a course or the whole vault (links, ima
 
 This is the result of the structural check on: $ARGUMENTS (if empty, the whole vault).
 
-!`python3 .opencode/scripts/vault-audit.py $ARGUMENTS`
+!`python3 .opencode/scripts/vault-audit.py $ARGUMENTS --short`
 
 Don't modify any file. Report the result like this:
 

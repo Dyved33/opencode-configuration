@@ -6,6 +6,8 @@ Check: $ARGUMENTS (if empty, the whole project).
 
 Run these checks yourself, in this order, and only the ones that apply to the project:
 
+Run the checks in batches: independent commands in one tool call, `rg -l` or `rg --count` first, and open only the files with a hit.
+
 1. **Scripts.** Read `package.json`: if `lint`, `build` or `test` exist, run them (`npm run lint`, `npm run build`, `npm test`) and collect the failures. If a script needs a dev server or a database that isn't there, skip it and say so.
 2. **Leftovers.** `rg` for `console.log`, `console.debug`, `debugger`, `TODO`, `FIXME`, commented-out blocks of code, and unused files the router no longer references.
 3. **Frontend.** `<img` without `alt`, `<a href="#"` or empty, `<div onClick`/`<span onClick>` without a role, pages without `<title>` or meta description, more than one `<h1>` in a file, missing `lang=`, labels without a matching input.

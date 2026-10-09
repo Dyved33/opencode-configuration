@@ -2,10 +2,33 @@
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "notes",
   "instructions": [".opencode/style.md"],
+  "small_model": "opencode/minimax-m2.5-free",
+  "lsp": false,
+  "formatter": false,
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 10
+  },
+  "watcher": {
+    "ignore": [
+      "**/*.png",
+      "**/*.jpg",
+      "**/*.jpeg",
+      "**/*.gif",
+      "**/*.webp",
+      "**/*.pdf",
+      "**/*.ppt",
+      "**/*.pptx",
+      ".git/**",
+      "**/node_modules/**"
+    ]
+  },
   "permission": {
     "external_directory": {
       "*": "deny"
     },
+    "doom_loop": "ask",
     "edit": {
       "*": "deny",
       "*.md": "allow",

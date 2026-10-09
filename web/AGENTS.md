@@ -33,6 +33,7 @@ The folders depend on the project: follow what is there.
 7. **The project decides.** Use the framework, the naming, the folder layout and the styling system already in the project. Don't introduce a new library, a new pattern or a new build tool unless the user asks for it.
 8. **Sources.** First the code of the project, then the official docs, then the web. Keep external research short.
 9. **Final summary.** Close every job with at most 5 lines: files touched, what changed, which checks you ran, what is left.
+10. **No loops.** If the same action fails three times or brings no progress, stop and ask the user instead of retrying. Another attempt adds cost, not certainty.
 
 ## Tools
 
