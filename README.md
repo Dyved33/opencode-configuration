@@ -27,6 +27,12 @@ Notes configuration only:
 opencode plugin opencode-parser -g   # the parser that reads photos of documents
 sudo apt install tesseract-ocr tesseract-ocr-ita   # photo reader
 sudo apt install poppler-utils       # pdftoppm / pdftotext for PDFs
+
+opencode plugin @franlol/opencode-md-table-formatter@latest   # realigns Markdown tables
+opencode plugin @tarquinen/opencode-dcp@latest                # reduces token usage using old outputs 
+opencode plugin @zenobius/opencode-skillful                   # calls skills on-demand without keeping them in the context
+opencode plugin @plannotator/opencode@latest                  # reviews the plan
+opencode plugin opencode-websearch-cited@1.2.0                # web search with citations
 ```
 
 ## Install
