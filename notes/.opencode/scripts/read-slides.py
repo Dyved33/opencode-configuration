@@ -9,6 +9,11 @@ Usage:
   read-slides.py FILE --search "text"  pages in which the text appears
 
 It writes nothing in the vault. The .ppt files are converted into a temporary folder.
+
+If a PDF or PPTX has no extractable text (image pages), the text is read with
+Docling (OCR), when the file is not too long. Force it on long files with
+READ_SLIDES_DOCLING_FORCE=1; change the page limit with READ_SLIDES_DOCLING_LIMIT=N
+(default 60).
 """
 import hashlib
 import os
@@ -100,17 +105,70 @@ def ppt_pages(path):
     return pdf_pages(pdf)
 
 
+DOCLING_LIMIT = int(os.environ.get("READ_SLIDES_DOCLING_LIMIT", "60"))
+
+
+def docling_pages(path):
+    try:
+        from docling.document_converter import DocumentConverter
+    except ImportError:
+        print(
+            "docling not installed: run 'pip install --user --break-system-packages docling'",
+            file=sys.stderr,
+        )
+        return None
+    doc = DocumentConverter().convert(path).document
+    by_page = {}
+    for entry in doc.iterate_items():
+        item = entry[0] if isinstance(entry, tuple) else entry
+        prov = getattr(item, "prov", None)
+        if not prov:
+            continue
+        text = getattr(item, "text", "") or ""
+        if not text and hasattr(item, "export_to_markdown"):
+            try:
+                text = item.export_to_markdown()
+            except Exception:
+                text = ""
+        if text.strip():
+            by_page.setdefault(prov[0].page_no, []).append(text.strip())
+    total = doc.num_pages() if hasattr(doc, "num_pages") else (max(by_page) if by_page else 0)
+    return ["\n\n".join(by_page.get(n, [])) for n in range(1, total + 1)]
+
+
+def mostly_empty(pages):
+    return not pages or sum(1 for p in pages if not p.strip()) > len(pages) / 2
+
+
 def load(path):
     if not os.path.isfile(path):
         fail(f"file not found: {path}")
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
-        return pdf_pages(path)
-    if ext == ".pptx":
-        return pptx_pages(path)
-    if ext == ".ppt":
+        pages = pdf_pages(path)
+    elif ext == ".pptx":
+        pages = pptx_pages(path)
+    elif ext == ".ppt":
         return ppt_pages(path)
-    fail(f"unsupported format: {ext} (allowed: .pdf, .pptx, .ppt)")
+    else:
+        fail(f"unsupported format: {ext} (allowed: .pdf, .pptx, .ppt)")
+
+    if mostly_empty(pages):
+        if len(pages) <= DOCLING_LIMIT or os.environ.get("READ_SLIDES_DOCLING_FORCE") == "1":
+            print(
+                f"[{os.path.basename(path)}] the text is not extractable: trying Docling, it may take a while...",
+                file=sys.stderr,
+            )
+            alternative = docling_pages(path)
+            if alternative and not mostly_empty(alternative):
+                return alternative
+        else:
+            print(
+                f"[{os.path.basename(path)}] {len(pages)} pages without text: Docling skipped (long file). "
+                "Take a photo of the slides or force it with READ_SLIDES_DOCLING_FORCE=1.",
+                file=sys.stderr,
+            )
+    return pages
 
 
 def normalize(s):

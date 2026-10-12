@@ -5,7 +5,7 @@ into the target directory, start OpenCode, and it works.
 
 | Folder | Copy it into | What it is for |
 |---|---|---|
-| `notes/` | your Obsidian vault of university notes | one note = one lesson: writing, integrating, reviewing |
+| `notes/` | your Obsidian vault of university notes | one note = one lesson: writing, integrating, reviewing, with OCR, semantic search and a book reader |
 | `web/` | a web project (portals and websites) | writing and reviewing code: C# + React today, adaptable |
 
 Both carry `AGENTS.md` and `opencode.json` at the top and everything else under
@@ -33,7 +33,14 @@ opencode plugin @tarquinen/opencode-dcp@latest                # reduces token us
 opencode plugin @zenobius/opencode-skillful                   # calls skills on-demand without keeping them in the context
 opencode plugin @plannotator/opencode@latest                  # reviews the plan
 opencode plugin opencode-websearch-cited@1.2.0                # web search with citations
+
+opencode plugin @tuanhung303/opencode-acp@latest              # compacts long sessions by time
+python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
 ```
+
+The pip line installs the Python side: `pypdf` for the book reader, `obsidian-mcp-search`
+for the semantic search server and `docling` for the OCR fallback on image-only PDFs. The
+search server runs as a user service; see the "Semantic search" section below.
 
 ## Install
 
@@ -71,14 +78,15 @@ If a configuration is broken and OpenCode refuses to start:
 | Repo path | Installed path | What it is |
 |---|---|---|
 | `notes/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
-| `notes/opencode.json` | `opencode.json` | permissions: markdown only, no leaving the vault, no code execution |
+| `notes/opencode.json` | `opencode.json` | permissions, the ACP plugin and the `obsidian-search` MCP server |
 | `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
 | `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
 | `notes/.opencode/agents/reviewer.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
-| `notes/.opencode/commands/` | `.opencode/commands/` | `/lesson`, `/review`, `/audit`, `/slide`, `/split` |
-| `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader, structural audit, loss check, splitter |
+| `notes/.opencode/commands/` | `.opencode/commands/` | `/lesson`, `/review`, `/audit`, `/slide`, `/split`, `/book` |
+| `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader (with Docling OCR fallback), structural audit, loss check, splitter, book reader |
 | `notes/Opencode_Guide.md` | `Opencode_Guide.md` | guide for the user, with examples and troubleshooting |
 | `notes/chat_prompt.md` | `chat_prompt.md` | short prompts for Antigravity and web chat |
+| `notes/books/` | `books/` | textbooks, one PDF per course (empty: you fill it) |
 | `notes/.gitignore` | `.gitignore` | lines merged into yours, never replacing them |
 
 ## `web/` — what is inside
@@ -153,6 +161,28 @@ PDFs, slides, `.git` and `node_modules`, so file changes don't spam the session.
 `permission.doom_loop: "ask"` stops the agent when it repeats the same tool call
 three times.
 
+**Image-only PDFs are read with OCR.** `read-slides.py` uses `pdftotext` first; if
+more than half of the pages come out empty it retries with Docling automatically. It
+only kicks in for files up to 60 pages (override with `READ_SLIDES_DOCLING_LIMIT`;
+force with `READ_SLIDES_DOCLING_FORCE=1`), so a 2000-page book is never converted page
+by page. The first run downloads the OCR models.
+
+**Search by meaning, not by word.** The `obsidian-search` MCP server (the
+`obsidian-mcp-search` package) embeds the notes and answers queries by similarity, so
+the agent finds a lesson by topic instead of by exact wording. It is optional: without
+the server the agent falls back to `grep` and the structural audit.
+
+**Long sessions are compacted by time.** The ACP plugin
+(`@tuanhung303/opencode-acp`, the `plugin` array of `opencode.json`) prunes stale
+context while keeping the active constraints, so a long lesson session does not lose
+the end of the conversation to the size limit.
+
+**The textbooks are a complement, not a source.** Books live in
+`books/<Course name>.pdf`, one per course, and are read with `books.py` (command
+`/book`: `list`, `info`, `toc`, `page`, `search`). A note is complete without the
+book: the agent asks for consent once, at the end of a lesson, before integrating
+anything from it.
+
 **Efficiency and loops.** Both agents carry a short `## Efficiency` section (read
 each file once, `grep` first, group reads) and rule 10 of `AGENTS.md` ("Stop on
 loops") tells the agent to stop and ask instead of retrying a failing action.
@@ -173,6 +203,38 @@ the folder it was started in.
 you write (`.py`, `.html`, `.sql`). It is an input just like the slides: the agent
 reads it to link it from the notes, but it doesn't modify it and it doesn't run
 code.
+
+## Semantic search (notes)
+
+The `obsidian-search` MCP server indexes the Markdown notes and answers queries by
+embedding similarity (hybrid lexical + vector). It runs as an HTTP MCP server on
+`http://127.0.0.1:8848/mcp`; OpenCode connects to it through the `mcp` block in
+`opencode.json`. Install the Python side with the pip line in Prerequisites, then run
+it as a user service:
+
+```bash
+systemctl --user status  obsidian-mcp-search
+systemctl --user restart obsidian-mcp-search     # reloads and re-indexes
+journalctl --user -u obsidian-mcp-search -n 50
+```
+
+The embedding model is
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (384-dim): the tool's own
+default, `intfloat/multilingual-e5-small`, is not supported by the installed
+`fastembed` and must be overridden through `OMCS_EMBED_MODEL`. The registry lives in
+`~/.config/obsidian-mcp-search/config.toml` and the index in
+`~/.cache/obsidian-mcp-search/`. Register a vault (note the env var) and keep it fresh:
+
+```bash
+OMCS_EMBED_MODEL="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" \
+  obsidian-mcp-search add-vault notes "/path/to/vault"
+```
+
+The server watches the notes and re-indexes changed files automatically; after bulk
+edits call the MCP tool `reindex` or restart the service. Do not use the
+`obsidian-mcp-search search` CLI: it ignores `OMCS_EMBED_MODEL` and builds a throwaway
+index at `<vault>/.omcs-index.sqlite`, and if you pass a vault *name* it creates a
+stray folder in the cwd. Use the MCP server instead.
 
 ## Implementation details (notes)
 

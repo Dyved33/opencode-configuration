@@ -11,6 +11,19 @@ opencode
 
 After any change to `opencode.json` or to a file in `.opencode/` it has to be restarted: the configuration is only read at startup.
 
+## Prerequisites
+
+```bash
+opencode plugin opencode-parser -g                    # reads photos of documents (parse tool)
+opencode plugin @tuanhung303/opencode-acp@latest      # compacts long sessions by time
+sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils
+python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
+```
+
+`pypdf` is for the book reader, `obsidian-mcp-search` for the semantic search server and
+`docling` for the OCR fallback on image-only PDFs. The search server is optional and runs
+as a user service (`systemctl --user status obsidian-mcp-search`).
+
 ## How it is organized
 
 | File | What it is for |
@@ -18,13 +31,25 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 | `AGENTS.md` | the few rules that always apply. It is read at every session |
 | `.opencode/style.md` | how the notes must be written. It is loaded at every session |
 | `.opencode/agents/` | the 2 agents |
-| `.opencode/commands/` | the 5 commands |
-| `.opencode/scripts/` | the 4 scripts: slide reading, structural check, loss check, splitting of single files |
-| `opencode.json` | permissions |
+| `.opencode/commands/` | the 6 commands |
+| `.opencode/scripts/` | the 5 scripts: slide reading (with Docling OCR fallback), structural check, loss check, splitting of single files, book reader |
+| `opencode.json` | permissions, the ACP plugin and the `obsidian-search` server |
 | `chat_prompt.md` | prompts to use outside OpenCode (Antigravity, web chat) |
+| `books/` | the textbooks, one PDF per course (input): read them with `/book` |
 | `<Course>/esercizi/` | the code you write (input): the agent doesn't touch it |
 
 To change the note style you edit only `.opencode/style.md`.
+
+## Searching by topic
+
+Besides `grep`, the agent can search by meaning through the `obsidian-search` MCP server:
+it embeds the notes and returns the lessons closest to a query, so you can ask "where is
+the pumping lemma explained?" without knowing the exact words. The server runs in the
+background; to refresh it after bulk edits:
+
+```bash
+systemctl --user restart obsidian-mcp-search
+```
 
 ## The flow of a lesson
 
@@ -89,6 +114,21 @@ It finds: broken links, missing images, unclosed formulas and code blocks, unbal
 /slide "Primo semestre/Linguaggi/automi.pptx" --search "pila vuota"
 ```
 
+If the file is made only of images, `read-slides.py` retries with Docling (OCR) on its
+own, up to 60 pages (`READ_SLIDES_DOCLING_LIMIT` to change the limit,
+`READ_SLIDES_DOCLING_FORCE=1` to force it).
+
+**`/book`** reads a textbook in `books/`. It is a complement to the notes, never a default source: the agent asks for your consent before using it.
+
+```
+/book list                                              books present and matched course
+/book "books/Introduction to AI.pdf" toc                table of contents (PDF bookmarks)
+/book "books/Introduction to AI.pdf" page 28            text of a page (or 19-21)
+/book "books/Introduction to AI.pdf" search "firewall"  pages containing the text
+```
+
+If a book has no bookmarks, `toc` says so and you fall back to `page` and `search`.
+
 **`/split`** splits a single notes file into one note per lesson. It is needed only once, for the notes written so far.
 
 ```
@@ -146,8 +186,8 @@ Inside a callout the image stays `![[x.png|300]]`. The model cannot see the imag
 - It doesn't create notes: you create them and it fills them. It can only create the course index. The only exception is `/split`, which asks for confirmation.
 - It doesn't touch `.txt`, PDFs, slides, images and the files in `esercizi/`. It doesn't run code.
 - It doesn't leave the vault.
-- In the terminal it can only run the four scripts, `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext` and the read-only git commands. For `pdftoppm` (which creates images) it asks for confirmation.
-- It can search the web.
+- In the terminal it can only run the five scripts, `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext` and the read-only git commands. For `pdftoppm` (which creates images) it asks for confirmation.
+- It can search the web and the notes by topic (the `obsidian-search` server).
 - It doesn't commit or push: those stay with you.
 
 ## The scripts, by hand too
@@ -163,9 +203,14 @@ python3 .opencode/scripts/check-losses.py NOTE             # what was lost compa
 python3 .opencode/scripts/check-losses.py NOTE --with SOURCE   # compared to a .txt or the slides
 python3 .opencode/scripts/split-notes.py FILE             # split plan
 python3 .opencode/scripts/split-notes.py FILE --write     # creates the notes
+python3 .opencode/scripts/books.py list                   # books and matched course
+python3 .opencode/scripts/books.py info FILE              # pages, title, course
+python3 .opencode/scripts/books.py toc FILE               # table of contents
+python3 .opencode/scripts/books.py page FILE 28           # text of a page (or 19-21)
+python3 .opencode/scripts/books.py search FILE "firewall" # pages containing the text
 ```
 
-`read-slides.py` reads PDF, PPTX and PPT (the PPTs are converted with LibreOffice into a temporary folder). If a file is made only of images it says so: in that case the content has to be read by hand.
+`read-slides.py` reads PDF, PPTX and PPT (the PPTs are converted with LibreOffice into a temporary folder). If the text layer is missing (more than half of the pages empty) it retries with Docling, i.e. OCR: only files up to 60 pages, change the limit with `READ_SLIDES_DOCLING_LIMIT` or force it with `READ_SLIDES_DOCLING_FORCE=1`. The first run downloads the OCR models. `books.py` reads the textbooks in `books/` with the same engine.
 
 ## The opencode-parser plugin
 

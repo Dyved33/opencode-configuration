@@ -5,6 +5,14 @@
   "small_model": "opencode/minimax-m2.5-free",
   "lsp": false,
   "formatter": false,
+  "plugin": ["@tuanhung303/opencode-acp@latest"],
+  "mcp": {
+    "obsidian-search": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8848/mcp",
+      "enabled": true
+    }
+  },
   "compaction": {
     "auto": true,
     "prune": true,
@@ -48,6 +56,7 @@
       "*": "deny",
       "python3 .opencode/scripts/vault-audit.py*": "allow",
       "python3 .opencode/scripts/read-slides.py*": "allow",
+      "python3 .opencode/scripts/books.py*": "allow",
       "python3 .opencode/scripts/check-losses.py*": "allow",
       "python3 .opencode/scripts/split-notes.py*": "allow",
       "python3 .opencode/scripts/split-notes.py*--write*": "ask",
