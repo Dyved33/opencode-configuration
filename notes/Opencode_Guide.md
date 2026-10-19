@@ -15,7 +15,14 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 
 ```bash
 opencode plugin opencode-parser -g                    # reads photos of documents (parse tool)
-opencode plugin @tuanhung303/opencode-acp@latest      # compacts long sessions by time
+opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by pruning old outputs and duplicate calls
+opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
+opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+
+# Ollama (local models for zero-token small_model, < 9GB)
+ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
+ollama pull qwen2.5:3b                                # ultralight model for 8GB RAM machines (~1.9 GB)
+
 sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
 ```
@@ -33,7 +40,7 @@ as a user service (`systemctl --user status obsidian-mcp-search`).
 | `.opencode/agents/` | the 2 agents |
 | `.opencode/commands/` | the 6 commands |
 | `.opencode/scripts/` | the 5 scripts: slide reading (with Docling OCR fallback), structural check, loss check, splitting of single files, book reader |
-| `opencode.json` | permissions, the ACP plugin and the `obsidian-search` server |
+| `opencode.json` | permissions, Ollama provider, rate limit fallback, and the obsidian-search server |
 | `chat_prompt.md` | prompts to use outside OpenCode (Antigravity, web chat) |
 | `books/` | the textbooks, one PDF per course (input): read them with `/book` |
 | `<Course>/esercizi/` | the code you write (input): the agent doesn't touch it |

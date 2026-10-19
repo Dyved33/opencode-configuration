@@ -11,6 +11,18 @@ opencode
 
 After any change to `opencode.json` or to a file in `.opencode/` it has to be restarted: the configuration is only read at startup.
 
+## Prerequisites
+
+```bash
+opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by pruning old outputs and duplicate calls
+opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
+opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+
+# Ollama (local models for zero-token small_model and coder fallbacks)
+ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
+ollama pull qwen2.5-coder:7b                          # coding model (~4.7 GB)
+```
+
 ## How it is organized
 
 | File | What it is for |
@@ -19,7 +31,7 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 | `.opencode/style.md` | how the code must be written. It is loaded at every session |
 | `.opencode/agents/` | the 2 agents |
 | `.opencode/commands/` | the 4 commands |
-| `opencode.json` | permissions, MCP browser |
+| `opencode.json` | permissions, local Ollama provider, rate limit fallback, MCP browser |
 | `Opencode_Guide.md` | this guide |
 
 To change the code conventions you edit only `.opencode/style.md`.
