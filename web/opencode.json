@@ -45,9 +45,16 @@
   "instructions": [
     ".opencode/style.md",
     "~/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md",
-    "~/.config/opencode/skills/no-ai-slop/SKILL.md"
+    "~/.agents/skills/no-ai-slop/SKILL.md"
   ],
-  "small_model": "ollama/qwen2.5:7b",
+  "agents": {
+    "title": {
+      "model": "ollama/qwen2.5:7b"
+    },
+    "compaction": {
+      "model": "ollama/qwen2.5:7b"
+    }
+  },
   "plugin": [
     "@tarquinen/opencode-dcp@latest",
     "@plannotator/opencode@latest",
@@ -55,6 +62,9 @@
   ],
   "compaction": {
     "auto": true
+  },
+  "experimental": {
+    "todo": true
   },
   "permission": {
     "external_directory": {

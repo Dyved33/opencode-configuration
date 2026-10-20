@@ -19,7 +19,7 @@ opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by prunin
 opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
 opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
 
-# Ollama (local models for zero-token small_model, < 9GB)
+# Ollama (local models for zero-token titles and compaction, < 9GB)
 ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
 ollama pull qwen2.5:3b                                # ultralight model for 8GB RAM machines (~1.9 GB)
 
@@ -195,6 +195,7 @@ Inside a callout the image stays `![[x.png|300]]`. The model cannot see the imag
 - It doesn't leave the vault.
 - In the terminal it can only run the five scripts, `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext` and the read-only git commands. For `pdftoppm` (which creates images) it asks for confirmation.
 - It can search the web and the notes by topic (the `obsidian-search` server).
+- It keeps a todo list of the work in progress with the `todowrite` tool (an experimental OpenCode feature, enabled here with `"experimental": { "todo": true }`): you see it in the session and in the sidebar.
 - It doesn't commit or push: those stay with you.
 
 ## The scripts, by hand too

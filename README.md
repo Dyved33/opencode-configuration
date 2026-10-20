@@ -24,7 +24,7 @@ opencode plugin @tarquinen/opencode-dcp@latest                # reduces token us
 opencode plugin @plannotator/opencode@latest                  # reviews the plan
 opencode plugin @azumag/opencode-rate-limit-fallback          # automatic fallback to secondary model on rate limit (429)
 
-# Ollama (local models for zero-token small_model and fallbacks)
+# Ollama (local models for zero-token titles, compaction and fallbacks)
 ollama pull qwen2.5:7b                                        # balanced model (~4.7 GB)
 ollama pull qwen2.5:3b                                        # ultralight model for 8GB RAM machines (~1.9 GB)
 ollama pull qwen2.5-coder:7b                                  # coding model (~4.7 GB)
@@ -77,8 +77,8 @@ If a configuration is broken and OpenCode refuses to start:
 
 | Repo path | Installed path | What it is |
 |---|---|---|
-| `notes/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
-| `notes/opencode.json` | `opencode.json` | permissions, local Ollama provider, rate limit fallback, obsidian-search MCP server |
+| `notes/AGENTS.md` | `AGENTS.md` | structure, 11 rules, tools table (read every session) |
+| `notes/opencode.json` | `opencode.json` | permissions (v2 ruleset), local Ollama provider, rate limit fallback, obsidian-search MCP server, experimental todowrite |
 | `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
 | `notes/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
 | `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
@@ -96,7 +96,7 @@ If a configuration is broken and OpenCode refuses to start:
 | Repo path | Installed path | What it is |
 |---|---|---|
 | `web/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
-| `web/opencode.json` | `opencode.json` | permissions, local Ollama provider, Playwright MCP, rate limit fallback |
+| `web/opencode.json` | `opencode.json` | permissions, local Ollama provider, Playwright MCP, rate limit fallback, experimental todowrite |
 | `web/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
 | `web/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
 | `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
@@ -117,9 +117,10 @@ a browser. What it is not: leave the project, deploy or publish anything
 push (only when you ask for it in that message, and then it asks for
 confirmation).
 
-The web payload shares the resource-saving keys of the notes one: `small_model`
-(`ollama/qwen2.5:7b`), `compaction` (`auto: true`), rate-limit fallback and
-`permission.doom_loop: "deny"`.
+The web payload shares the resource-saving keys of the notes one: the local
+model for titles and compaction (`agents.title` and `agents.compaction`, both
+`ollama/qwen2.5:7b`), `compaction` (`auto: true`), rate-limit fallback and
+`doom_loop: "deny"`.
 Unlike the notes config, `lsp` and `formatter` stay enabled and `bash` stays
 `allow` (npm, build, tests, Playwright); there are no `watcher` or Markdown-edit
 rules because it works on code. Both agents add an `## Efficiency` section and
@@ -157,13 +158,26 @@ runs the structural check.
 weak model sometimes skips reading, and the style is exactly the part that must
 not be skipped.
 
-**Fewer tokens, less noise.** `small_model` (`ollama/qwen2.5:7b`) answers
-titles, summaries and compaction locally with zero API token cost.
+**Fewer tokens, less noise.** The local model (`ollama/qwen2.5:7b`) answers titles
+and compaction with zero API token cost: it is set on the two built-in agents,
+`agents.title` and `agents.compaction` (the old `small_model` key is deprecated and
+no longer read).
 `compaction` (`auto: true`) keeps the conversation inside the window.
 `lsp: false` and `formatter: false` are off because the vault
 is Markdown: no language servers, no formatting. `watcher.ignore` skips images,
 PDFs, slides, `.git` and `node_modules`, so file changes don't spam the session.
 `permission.doom_loop: "deny"` stops the agent immediately if it loops.
+
+**The todo list is an experimental tool.** OpenCode 2.1 ships the `todowrite` tool
+behind a flag: `"experimental": { "todo": true }` in `opencode.json` gives the model
+the tool and shows the task list in the session and in the sidebar. The permissions
+have to allow it too (`"todowrite": "allow"`, or `{ "action": "todowrite",
+"resource": "*", "effect": "allow" }` in the v2 ruleset). Both payloads set it.
+
+**The permission ruleset is the v2 one.** The notes payload uses the ordered
+`permissions` array (`{ "action", "resource", "effect" }`) instead of the
+deprecated `permission` object: the last matching rule wins, so the specific
+denies (`*/esercizi/*`, `AGENTS.md`, `.opencode/**`) come after `*.md`.
 
 **Image-only PDFs are read with OCR.** `read-slides.py` uses `pdftotext` first; if
 more than half of the pages come out empty it retries with Docling automatically. It

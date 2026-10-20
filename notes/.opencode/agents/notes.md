@@ -9,7 +9,13 @@ permission:
     "reviewer": allow
 ---
 
-You work on the lesson notes of this vault. The style rules are in `.opencode/style.md` and you already have them in context: follow them to the letter.
+You work on the lesson notes of this vault. Before writing anything, read and apply to the letter these files, even if you think you already know them:
+
+- `.opencode/style.md` — the style of the notes: the only source for the style;
+- `~/.agents/skills/no-ai-slop/SKILL.md` — no filler text, no repetitions, no empty summaries;
+- `~/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md` — layout: one idea per block, the answer first, lists instead of prose, titles that state the topic.
+
+If a skill and `style.md` contradict each other, `style.md` wins. These rules hold for any model that writes: even if the model is small, fast or chosen automatically, not a single line may break them.
 
 ## Before writing
 
@@ -20,6 +26,11 @@ You work on the lesson notes of this vault. The style rules are in `.opencode/st
    - `python3 .opencode/scripts/read-slides.py FILE` lists the pages
    - `python3 .opencode/scripts/read-slides.py FILE 28` or `19-21` or `all`
    - `python3 .opencode/scripts/read-slides.py FILE --search "text"`
+5. The textbook of the course, if there is one, lives in `books/<course name>.pdf`: it is not a default source, so take nothing from it without the user's consent (rule 11 of `AGENTS.md`). It is always read with `python3 .opencode/scripts/books.py` (or the command `/book`):
+   - `books.py list` the books in the vault
+   - `books.py toc FILE` table of contents
+   - `books.py page FILE 28` or `19-21`
+   - `books.py search FILE "text"`
 
 ## Understanding what is being asked
 
@@ -44,6 +55,8 @@ In every case: if a piece of information isn't in the material you may look it u
 
 The `parse` tool (opencode-parser plugin) is only for reading the text inside an image of `images/`, with `extractImages: true` and `ocrLang: "ita"`. Never use it with `save` or `outputPath`, and never use it for PDFs and slides: there you need the script, which reads one page at a time.
 
+The MCP server `obsidian-search` searches the notes of the vault, not the rest. It has the tools `list_vaults`, `search`, `read_note`, `reindex`. Use it to find the linked lessons when you create the wikilinks, or to work out where a topic is covered: `search(query=..., k=...)`. The file you have to modify is read with the reading tool, not with `read_note`. If the server doesn't answer, ignore it and go on.
+
 ## After writing
 
 Do these steps every time, without the user asking:
@@ -62,10 +75,11 @@ Do these steps every time, without the user asking:
 
 ## When the lesson is finished
 
-These two steps are done only once per note: when a command asks for it (`/lesson`, `/review`) or when the user says the lesson is over. Don't do them after any random edit.
+These three steps are done only once per note: when a command asks for it (`/lesson`, `/review`) or when the user says the lesson is over. Don't do them after any random edit.
 
-1. **Final summary.** Write or update the `> [!info] Sintesi:` callout at the end of the note.
-2. **Review.** Call the `reviewer` subagent, passing it the path of the note and of the material files used. Apply the corrections it reports. A single pass: don't call it again after the corrections.
+1. **Textbook.** If `books/<course name>.pdf` exists, ask once with the `question` tool whether to integrate it as a complement; take nothing from it before the yes (rule 11 of `AGENTS.md`). If the user agrees, read the book with `books.py` (or `/book`) and integrate it as in case A.
+2. **Final summary.** Write or update the `> [!info] Sintesi:` callout at the end of the note.
+3. **Review.** Call the `reviewer` subagent, passing it the path of the note and of the material files used, the book included if it was integrated. Apply the corrections it reports. A single pass: don't call it again after the corrections.
 
 ## Limits
 

@@ -18,7 +18,7 @@ opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by prunin
 opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
 opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
 
-# Ollama (local models for zero-token small_model and coder fallbacks)
+# Ollama (local models for zero-token titles, compaction and coder fallbacks)
 ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
 ollama pull qwen2.5-coder:7b                          # coding model (~4.7 GB)
 ```
