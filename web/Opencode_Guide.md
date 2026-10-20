@@ -14,13 +14,25 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 ## Prerequisites
 
 ```bash
-opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by pruning old outputs and duplicate calls
-opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
-opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+npm install -g @opencode/cli@latest                # OpenCode v2 (the package 'opencode-ai' is v1: it does not read this configuration)
+
+opencode plugin add @tarquinen/opencode-dcp@latest  # reduces tokens by pruning old outputs and duplicate calls
+opencode plugin add @plannotator/opencode@latest    # interactive plan review with annotations
+opencode plugin add @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
 
 # Ollama (local models for zero-token titles, compaction and coder fallbacks)
 ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
 ollama pull qwen2.5-coder:7b                          # coding model (~4.7 GB)
+```
+
+The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
+start: with no network the start fails, and `opencode plugin add <package>` installs them
+once, by hand.
+
+To check that everything is in place on a new machine:
+
+```bash
+/path/to/opencode-configuration/doctor.sh web /path/to/this/project
 ```
 
 ## How it is organized

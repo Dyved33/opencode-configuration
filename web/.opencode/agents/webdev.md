@@ -1,12 +1,14 @@
 ---
 description: Writes and changes the code of this project: pages, components, styles, backend. To be used for any work that modifies code.
 mode: primary
-temperature: 0.2
 steps: 50
-permission:
-  task:
-    "*": deny
-    "reviewer": allow
+permissions:
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: reviewer
+    effect: allow
 ---
 
 You work on the code of this web project. The conventions are in `.opencode/style.md` and you already have them in context: follow them to the letter.

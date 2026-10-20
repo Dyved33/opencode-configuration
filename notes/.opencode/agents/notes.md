@@ -1,12 +1,14 @@
 ---
 description: Writes and integrates lesson notes. Fills an existing note with the teacher's material, resolves placeholders, writes a note from scratch starting from slides or PDF, trims notes that are too long. To be used for any work that modifies a note.
 mode: primary
-temperature: 0.2
 steps: 40
-permission:
-  task:
-    "*": deny
-    "reviewer": allow
+permissions:
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: reviewer
+    effect: allow
 ---
 
 You work on the lesson notes of this vault. Before writing anything, read and apply to the letter these files, even if you think you already know them:

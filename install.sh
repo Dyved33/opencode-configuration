@@ -4,25 +4,41 @@
 #   ./install.sh notes /path/to/vault        university notes vault
 #   ./install.sh web   /path/to/project      web project (portals and websites)
 #   ./install.sh notes /path/to/vault --force   back up and overwrite existing files
+#   ./install.sh notes /path/to/vault --check   check the environment, install nothing
+#   ./install.sh notes /path/to/vault --no-check  install, skip the environment check
 #
 # The whole content of notes/ or web/ is copied into the target: AGENTS.md and
 # opencode.json at the top, everything else under .opencode/.
 # Files that already exist are never touched unless --force is given, and with
 # --force they are first copied into <target>/.opencode-backup-<timestamp>/.
+#
+# Requirements: bash (not POSIX sh) and OpenCode v2 (npm install -g @opencode/cli@latest).
+# At the end the environment is checked with ./doctor.sh: the files are installed
+# even if something is missing, and the report says what to fix.
+#
+# Exit codes: 0 = installed and ready, 1 = the installation failed,
+# 2 = installed but the environment is not ready yet.
+
+if [ -z "${BASH_VERSION:-}" ]; then
+  exec bash "$0" "$@"
+fi
 
 set -euo pipefail
 
 usage() {
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
   exit 1
 }
 
 PAYLOAD_NAME="${1:-}"
 TARGET="${2:-}"
 FORCE=0
+MODE=install
 for arg in "${@:3}"; do
   case "$arg" in
     --force) FORCE=1 ;;
+    --check) MODE=check ;;
+    --no-check) MODE=install-no-check ;;
     *) echo "ERROR: unknown option $arg"; usage ;;
   esac
 done
@@ -38,8 +54,33 @@ PAYLOAD="$REPO_DIR/$PAYLOAD_NAME"
 
 [ -d "$PAYLOAD" ] || { echo "ERROR: $PAYLOAD not found"; exit 1; }
 [ -f "$PAYLOAD/opencode.json" ] || { echo "ERROR: $PAYLOAD has no opencode.json"; exit 1; }
-[ -d "$TARGET" ] || { echo "ERROR: target '$TARGET' does not exist or is not a folder"; exit 1; }
+
+# the configuration must be valid JSON, or OpenCode will not start at all
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$PAYLOAD/opencode.json" || {
+    echo "ERROR: $PAYLOAD/opencode.json is not valid JSON, nothing was installed"
+    exit 1
+  }
+fi
+
+# the target is created if it does not exist, it must not be the payload itself
+if [ -e "$TARGET" ] && [ ! -d "$TARGET" ]; then
+  echo "ERROR: target '$TARGET' exists and is not a folder"
+  exit 1
+fi
+if [ ! -d "$TARGET" ]; then
+  mkdir -p "$TARGET"
+  echo "Created the target folder $TARGET"
+fi
 TARGET="$(cd "$TARGET" && pwd)"
+if [ "$TARGET" = "$(cd "$PAYLOAD" && pwd)" ]; then
+  echo "ERROR: the target is the payload folder itself, nothing was installed"
+  exit 1
+fi
+
+if [ "$MODE" = "check" ]; then
+  exec "$REPO_DIR/doctor.sh" "$PAYLOAD_NAME" "$TARGET"
+fi
 
 COPIED=()
 SKIPPED=()
@@ -67,6 +108,11 @@ copy_tree() {
     name="$(basename "$entry")"
     # .gitignore is handled separately: its lines are merged, not replaced
     [ "$name" = ".gitignore" ] && { shopt -s dotglob nullglob; continue; }
+    # the python cache is not part of the configuration
+    [ "$name" = "__pycache__" ] && { shopt -s dotglob nullglob; continue; }
+    case "$name" in
+      *.pyc) shopt -s dotglob nullglob; continue ;;
+    esac
     target="$dst/$name"
     if [ -d "$entry" ] && [ ! -L "$entry" ]; then
       copy_tree "$entry" "$target"
@@ -88,19 +134,25 @@ copy_tree() {
 }
 
 merge_gitignore() {
-  [ -f "$PAYLOAD/.gitignore" ] || return 0
-  if [ ! -f "$TARGET/.gitignore" ]; then
-    cp -p "$PAYLOAD/.gitignore" "$TARGET/.gitignore"
-    COPIED+=("$TARGET/.gitignore")
-    return 0
-  fi
   local line added=0
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    grep -qxF "$line" "$TARGET/.gitignore" && continue
-    printf '%s\n' "$line" >> "$TARGET/.gitignore"
+  if [ -f "$PAYLOAD/.gitignore" ]; then
+    if [ ! -f "$TARGET/.gitignore" ]; then
+      cp -p "$PAYLOAD/.gitignore" "$TARGET/.gitignore"
+      COPIED+=("$TARGET/.gitignore")
+    else
+      while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        grep -qxF "$line" "$TARGET/.gitignore" && continue
+        printf '%s\n' "$line" >> "$TARGET/.gitignore"
+        added=1
+      done < "$PAYLOAD/.gitignore"
+    fi
+  fi
+  # the backups of --force must not show up as untracked files
+  if [ -f "$TARGET/.gitignore" ] && ! grep -qxF ".opencode-backup-*/" "$TARGET/.gitignore" 2>/dev/null; then
+    printf '%s\n' ".opencode-backup-*/" >> "$TARGET/.gitignore"
     added=1
-  done < "$PAYLOAD/.gitignore"
+  fi
   [ "$added" -eq 1 ] && echo "Added the missing ignore lines to $TARGET/.gitignore"
   return 0
 }
@@ -133,6 +185,22 @@ echo "  2. start opencode (restart it if it is already running)"
 echo "  3. opencode debug config    # to see what OpenCode actually loaded"
 if [ "$PAYLOAD_NAME" = "notes" ]; then
   echo "  4. prerequisites for the notes config:"
-  echo "       opencode plugin opencode-parser -g"
+  echo "       opencode plugin add opencode-parser"
   echo "       sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils"
+  echo "       python3 -m pip install --user --break-system-packages pypdf \"obsidian-mcp-search[server]\" docling"
+fi
+
+if [ "$MODE" = "install-no-check" ]; then
+  echo
+  echo "Environment check skipped (--no-check)."
+  exit 0
+fi
+
+echo
+if "$REPO_DIR/doctor.sh" "$PAYLOAD_NAME" "$TARGET"; then
+  exit 0
+else
+  echo
+  echo "The files are installed, but the environment is not ready: fix the [FAIL] lines above."
+  exit 2
 fi

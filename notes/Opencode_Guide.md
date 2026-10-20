@@ -14,10 +14,12 @@ After any change to `opencode.json` or to a file in `.opencode/` it has to be re
 ## Prerequisites
 
 ```bash
-opencode plugin opencode-parser -g                    # reads photos of documents (parse tool)
-opencode plugin @tarquinen/opencode-dcp@latest        # reduces tokens by pruning old outputs and duplicate calls
-opencode plugin @plannotator/opencode@latest          # interactive plan review with annotations
-opencode plugin @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+npm install -g @opencode/cli@latest                # OpenCode v2 (the package 'opencode-ai' is v1: it does not read this configuration)
+
+opencode plugin add opencode-parser                 # reads photos of documents (parse tool)
+opencode plugin add @tarquinen/opencode-dcp@latest  # reduces tokens by pruning old outputs and duplicate calls
+opencode plugin add @plannotator/opencode@latest    # interactive plan review with annotations
+opencode plugin add @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
 
 # Ollama (local models for zero-token titles and compaction, < 9GB)
 ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
@@ -25,6 +27,16 @@ ollama pull qwen2.5:3b                                # ultralight model for 8GB
 
 sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
+```
+
+The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
+start: with no network the start fails, and `opencode plugin add <package>` installs them
+once, by hand.
+
+To check that everything is in place on a new machine:
+
+```bash
+/path/to/opencode-configuration/doctor.sh notes /path/to/this/vault
 ```
 
 `pypdf` is for the book reader, `obsidian-mcp-search` for the semantic search server and

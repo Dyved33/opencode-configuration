@@ -58,6 +58,7 @@
   "lsp": false,
   "formatter": false,
   "plugins": [
+    "opencode-parser",
     "@tarquinen/opencode-dcp@latest",
     "@plannotator/opencode@latest",
     "@azumag/opencode-rate-limit-fallback@2.1.0"

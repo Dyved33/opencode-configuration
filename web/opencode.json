@@ -55,7 +55,7 @@
       "model": "ollama/qwen2.5:7b"
     }
   },
-  "plugin": [
+  "plugins": [
     "@tarquinen/opencode-dcp@latest",
     "@plannotator/opencode@latest",
     "@azumag/opencode-rate-limit-fallback@2.1.0"
@@ -66,64 +66,57 @@
   "experimental": {
     "todo": true
   },
-  "permission": {
-    "external_directory": {
-      "*": "deny"
-    },
-    "doom_loop": "deny",
-    "edit": {
-      "*": "allow",
-      "AGENTS.md": "deny",
-      "opencode.json": "deny",
-      "Opencode_Guide.md": "deny",
-      ".opencode/**": "deny"
-    },
-    "read": {
-      "*": "allow",
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.pem": "deny",
-      "*.key": "deny",
-      "id_rsa*": "deny"
-    },
-    "bash": {
-      "*": "allow",
-      "rm *": "ask",
-      "sudo *": "deny",
-      "git commit*": "ask",
-      "git push*": "ask",
-      "git reset*": "ask",
-      "git clean*": "ask",
-      "git restore*": "ask",
-      "git rebase*": "ask",
-      "*deploy*": "deny",
-      "npm publish*": "deny",
-      "pnpm publish*": "deny",
-      "yarn publish*": "deny",
-      "vercel*": "deny",
-      "netlify*": "deny",
-      "wrangler*": "deny",
-      "flyctl*": "deny",
-      "heroku*": "deny",
-      "kubectl*": "deny",
-      "docker push*": "deny",
-      "gh release*": "deny"
-    },
-    "webfetch": "allow",
-    "websearch": "allow",
-    "task": "allow",
-    "question": "allow",
-    "todowrite": "allow"
-  },
   "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@playwright/mcp"
-      ],
-      "enabled": true
+    "servers": {
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp"
+        ],
+        "enabled": true
+      }
     }
-  }
+  },
+  "permissions": [
+    { "action": "external_directory", "resource": "*", "effect": "deny" },
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" },
+    { "action": "read", "resource": "*.pem", "effect": "deny" },
+    { "action": "read", "resource": "*.key", "effect": "deny" },
+    { "action": "read", "resource": "id_rsa*", "effect": "deny" },
+    { "action": "edit", "resource": "*", "effect": "allow" },
+    { "action": "edit", "resource": "AGENTS.md", "effect": "deny" },
+    { "action": "edit", "resource": "opencode.json", "effect": "deny" },
+    { "action": "edit", "resource": "Opencode_Guide.md", "effect": "deny" },
+    { "action": "edit", "resource": ".opencode/**", "effect": "deny" },
+    { "action": "shell", "resource": "*", "effect": "allow" },
+    { "action": "shell", "resource": "rm *", "effect": "ask" },
+    { "action": "shell", "resource": "sudo *", "effect": "deny" },
+    { "action": "shell", "resource": "git commit*", "effect": "ask" },
+    { "action": "shell", "resource": "git push*", "effect": "ask" },
+    { "action": "shell", "resource": "git reset*", "effect": "ask" },
+    { "action": "shell", "resource": "git clean*", "effect": "ask" },
+    { "action": "shell", "resource": "git restore*", "effect": "ask" },
+    { "action": "shell", "resource": "git rebase*", "effect": "ask" },
+    { "action": "shell", "resource": "*deploy*", "effect": "deny" },
+    { "action": "shell", "resource": "npm publish*", "effect": "deny" },
+    { "action": "shell", "resource": "pnpm publish*", "effect": "deny" },
+    { "action": "shell", "resource": "yarn publish*", "effect": "deny" },
+    { "action": "shell", "resource": "vercel*", "effect": "deny" },
+    { "action": "shell", "resource": "netlify*", "effect": "deny" },
+    { "action": "shell", "resource": "wrangler*", "effect": "deny" },
+    { "action": "shell", "resource": "flyctl*", "effect": "deny" },
+    { "action": "shell", "resource": "heroku*", "effect": "deny" },
+    { "action": "shell", "resource": "kubectl*", "effect": "deny" },
+    { "action": "shell", "resource": "docker push*", "effect": "deny" },
+    { "action": "shell", "resource": "gh release*", "effect": "deny" },
+    { "action": "webfetch", "resource": "*", "effect": "allow" },
+    { "action": "websearch", "resource": "*", "effect": "allow" },
+    { "action": "subagent", "resource": "*", "effect": "allow" },
+    { "action": "question", "resource": "*", "effect": "allow" },
+    { "action": "todowrite", "resource": "*", "effect": "allow" }
+  ]
 }

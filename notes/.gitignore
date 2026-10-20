@@ -1,4 +1,5 @@
 .opencode/originals/
+.opencode-backup-*/
 .obsidian/
 .trash/
 __pycache__/

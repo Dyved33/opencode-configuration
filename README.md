@@ -14,15 +14,17 @@ instructions. No file inside them needs editing before the first run.
 
 ## Prerequisites
 
-Both configurations:
+Both configurations need **OpenCode v2**. The npm package is `@opencode/cli`: the
+package `opencode-ai` is version 1 and does not read this configuration (it ignores the
+`permissions` ruleset, the `plugins` key and the agent frontmatter).
 
 ```bash
-npm install -g opencode-ai@latest                             # latest version of opencode
+npm install -g @opencode/cli@latest                             # OpenCode v2
 python3 --version                                             # python 3 for scripts
 
-opencode plugin @tarquinen/opencode-dcp@latest                # reduces token usage using old outputs 
-opencode plugin @plannotator/opencode@latest                  # reviews the plan
-opencode plugin @azumag/opencode-rate-limit-fallback          # automatic fallback to secondary model on rate limit (429)
+opencode plugin add @tarquinen/opencode-dcp@latest           # reduces token usage using old outputs 
+opencode plugin add @plannotator/opencode@latest             # reviews the plan
+opencode plugin add @azumag/opencode-rate-limit-fallback     # automatic fallback to secondary model on rate limit (429)
 
 # Ollama (local models for zero-token titles, compaction and fallbacks)
 ollama pull qwen2.5:7b                                        # balanced model (~4.7 GB)
@@ -33,7 +35,7 @@ ollama pull qwen2.5-coder:7b                                  # coding model (~4
 Notes configuration only:
 
 ```bash
-opencode plugin opencode-parser -g                            # the parser that reads photos of documents
+opencode plugin add opencode-parser                           # the parser that reads photos of documents
 sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils # photo reader & pdftoppm / pdftotext for PDFs
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
 ```
@@ -41,6 +43,23 @@ python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search
 The pip line installs the Python side: `pypdf` for the book reader, `obsidian-mcp-search`
 for the semantic search server and `docling` for the OCR fallback on image-only PDFs. The
 search server runs as a user service; see the "Semantic search" section below.
+
+The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
+start. On a machine without network that start fails: install them once by hand with
+`opencode plugin add <package>`.
+
+## Check the machine
+
+`doctor.sh` checks everything the configuration needs and prints the command that fixes
+each missing piece. It changes nothing:
+
+```bash
+./doctor.sh notes "/path/to/vault"     # 0 = ready, 1 = something essential is missing
+./doctor.sh web   "/path/to/project"
+```
+
+`install.sh` runs it at the end of the installation, so a machine that is not ready says
+what is missing instead of failing later, in the middle of a lesson.
 
 ## Install
 
@@ -51,7 +70,11 @@ and with `--force` it backs everything up first):
 ./install.sh notes "/path/to/vault"
 ./install.sh web   "/path/to/project"
 ./install.sh notes "/path/to/vault" --force    # replace what is already there
+./install.sh notes "/path/to/vault" --check    # check the machine, install nothing
 ```
+
+The script creates the target folder if it does not exist, skips the python cache, and
+exits with 2 when the files are installed but the machine is not ready yet.
 
 By hand, the same thing:
 
@@ -96,7 +119,7 @@ If a configuration is broken and OpenCode refuses to start:
 | Repo path | Installed path | What it is |
 |---|---|---|
 | `web/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
-| `web/opencode.json` | `opencode.json` | permissions, local Ollama provider, Playwright MCP, rate limit fallback, experimental todowrite |
+| `web/opencode.json` | `opencode.json` | permissions (v2 ruleset), local Ollama provider, Playwright MCP, rate limit fallback, experimental todowrite |
 | `web/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
 | `web/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
 | `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
@@ -119,9 +142,8 @@ confirmation).
 
 The web payload shares the resource-saving keys of the notes one: the local
 model for titles and compaction (`agents.title` and `agents.compaction`, both
-`ollama/qwen2.5:7b`), `compaction` (`auto: true`), rate-limit fallback and
-`doom_loop: "deny"`.
-Unlike the notes config, `lsp` and `formatter` stay enabled and `bash` stays
+`ollama/qwen2.5:7b`), `compaction` (`auto: true`) and rate-limit fallback.
+Unlike the notes config, `lsp` and `formatter` stay enabled and `shell` stays
 `allow` (npm, build, tests, Playwright); there are no `watcher` or Markdown-edit
 rules because it works on code. Both agents add an `## Efficiency` section and
 rule 10 ("No loops") tells the agent to stop and ask instead of retrying.
@@ -166,7 +188,6 @@ no longer read).
 `lsp: false` and `formatter: false` are off because the vault
 is Markdown: no language servers, no formatting. `watcher.ignore` skips images,
 PDFs, slides, `.git` and `node_modules`, so file changes don't spam the session.
-`permission.doom_loop: "deny"` stops the agent immediately if it loops.
 
 **The todo list is an experimental tool.** OpenCode 2.1 ships the `todowrite` tool
 behind a flag: `"experimental": { "todo": true }` in `opencode.json` gives the model
@@ -174,10 +195,24 @@ the tool and shows the task list in the session and in the sidebar. The permissi
 have to allow it too (`"todowrite": "allow"`, or `{ "action": "todowrite",
 "resource": "*", "effect": "allow" }` in the v2 ruleset). Both payloads set it.
 
-**The permission ruleset is the v2 one.** The notes payload uses the ordered
-`permissions` array (`{ "action", "resource", "effect" }`) instead of the
-deprecated `permission` object: the last matching rule wins, so the specific
+**The permission ruleset is the v2 one, in both payloads.** The ordered
+`permissions` array (`{ "action", "resource", "effect" }`) replaces the deprecated
+`permission` object: the last matching rule wins, so the specific
 denies (`*/esercizi/*`, `AGENTS.md`, `.opencode/**`) come after `*.md`.
+The action names are the v2 ones: `shell` (not `bash`) and `subagent` (not `task`).
+The same goes for the agent frontmatter: `permissions:` (a list of rules) instead of
+`permission:`, and `subagent` instead of `task`.
+
+Two rules of the notes payload, `doom_loop` and `todowrite`, are kept because they
+are valid action names in the schema, but v2 does not list them among its core
+actions: if a future version drops them they simply stop matching and nothing
+breaks. The protection against loops is also written in `AGENTS.md` (rule 10).
+
+**One version, everywhere.** The configuration is written for OpenCode v2, and the
+package that installs it is `@opencode/cli`. `opencode-ai` is version 1: on a
+machine that has it, the `permissions` array, the `plugins` key and the agent
+frontmatter are not read, and the payload silently does nothing. `doctor.sh` checks
+the version first.
 
 **Image-only PDFs are read with OCR.** `read-slides.py` uses `pdftotext` first; if
 more than half of the pages come out empty it retries with Docling automatically. It
