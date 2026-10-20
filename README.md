@@ -46,6 +46,32 @@ The plugins are also declared in `opencode.json`, so OpenCode installs them at t
 start. On a machine without network that start fails: install them once by hand with
 `opencode plugin add <package>`.
 
+### Plan review (Plannotator)
+
+Plannotator opens the plan in the browser at the end of the planning phase: the plan can
+be annotated, approved, or sent back to the agent with changes. It is declared in
+`opencode.json` with options, so the tool reaches the project agents and not only the
+built-in `plan` one:
+
+```json
+{
+  "package": "@plannotator/opencode@latest",
+  "options": { "workflow": "all-agents" }
+}
+```
+
+`workflow` decides who gets the `submit_plan` tool:
+
+| workflow | behaviour |
+|---|---|
+| `all-agents` | every primary agent submits the plan for review at the end of the planning phase (used here) |
+| `plan-agent` | default: the tool is available to the built-in `plan` agent only, the other agents lose it |
+| `user-managed` | the tool is registered but nothing pushes the agents to use it |
+| `manual` | the tool is not registered at all |
+
+The reviewer agents run as `mode: subagent`: with `all-agents` the plugin injects the
+plan reminder into every primary agent, and a subagent never gets it.
+
 ### Ollama is optional
 
 The free models of OpenCode are the default and need nothing installed. Ollama is only

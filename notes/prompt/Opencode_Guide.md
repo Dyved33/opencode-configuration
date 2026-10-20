@@ -29,6 +29,22 @@ The plugins are also declared in `opencode.json`, so OpenCode installs them at t
 start: with no network the start fails, and `opencode plugin add <package>` installs them
 once, by hand.
 
+Plannotator opens the plan in the browser at the end of the planning phase, to annotate
+it and approve it or send it back with changes. It is declared with options in
+`opencode.json`:
+
+```json
+{
+  "package": "@plannotator/opencode@latest",
+  "options": { "workflow": "all-agents" }
+}
+```
+
+`all-agents` gives the `submit_plan` tool to the project agents, so the plan is reviewed
+before anything is written. The default, `plan-agent`, leaves the tool to the built-in
+`plan` agent only; `user-managed` registers it without pushing the agents to use it.
+The `reviewer` agent runs as `mode: subagent` so it never gets the plan reminder.
+
 To check that everything is in place on a new machine:
 
 ```bash

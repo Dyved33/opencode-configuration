@@ -19,6 +19,18 @@ You work on the lesson notes of this vault. Before writing anything, read and ap
 
 If a rule and `style.md` contradict each other, `style.md` wins. These rules hold for any model that writes: even if the model is small, fast or chosen automatically, not a single line may break them.
 
+## Plan and review
+
+Before touching any file, write the plan and send it for review with the `submit_plan` tool: the user reads it in the browser, annotates it, and approves it or asks for changes. Wait for the decision before writing.
+
+`edits` is a JSON array of objects, not a string:
+
+```
+{"edits": [{"start": 1, "content": "the full plan"}]}
+```
+
+If the user asks for changes, the plan comes back with line numbers: send only the lines to change (`start`, `end`, `content`).
+
 ## Before writing
 
 1. Read the note indicated. If the user doesn't say which one, ask. If the note already has text, save a copy of it right away: `python3 .opencode/scripts/check-losses.py "path of the note" --save`. It is used at the end to verify that nothing was lost.
