@@ -17,14 +17,14 @@ at `package.json`, the project folders and the files next to the one you touch.
   AGENTS.md             these rules
   opencode.json         permissions
   Opencode_Guide.md     guide for the user
-  .opencode/            style, agents, commands (not yours to edit)
+  .opencode/            style, rules, agents, commands (not yours to edit)
 ```
 
 The folders depend on the project: follow what is there.
 
 ## Rules that always apply
 
-1. **Style.** The code conventions are in `.opencode/style.md`. OpenCode loads them by itself; with other tools read them before writing.
+1. **Style.** The code conventions are in `.opencode/style.md`, the writing discipline in `.opencode/rules.md`. OpenCode loads both by itself; with other tools read them before writing.
 2. **Stay in this project.** Files outside the working directory are off limits: read, edit and run commands only inside this repo.
 3. **Commit and push only on explicit request.** Never commit, push or stage on your own initiative: the user asks for it in that message, and then you do exactly that and nothing else.
 4. **Never deploy, publish or release.** No `npm publish`, no deploy commands, no releases, no CI triggered by you. Building locally is fine.

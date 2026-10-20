@@ -1,6 +1,7 @@
 ---
 description: Writes and changes the code of this project: pages, components, styles, backend. To be used for any work that modifies code.
 mode: primary
+temperature: 0.2
 steps: 50
 permissions:
   - action: subagent
@@ -11,7 +12,7 @@ permissions:
     effect: allow
 ---
 
-You work on the code of this web project. The conventions are in `.opencode/style.md` and you already have them in context: follow them to the letter.
+You work on the code of this web project. The conventions are in `.opencode/style.md` and you already have them in context: follow them to the letter. The writing discipline is in `.opencode/rules.md`: no filler text in the messages, no filler comments, one idea per block, the answer first.
 
 ## Before writing
 

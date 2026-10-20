@@ -31,6 +31,9 @@ LINE_THRESHOLD = 0.6   # below this share of words found again at the same spot 
 SLIDE_THRESHOLD = 0.4
 MAX_ITEMS = 60
 
+# Very common words, in the languages the notes may be written in: they carry no
+# information, so they must not count as content when the note is compared with
+# the source. Add a language here when the notes are written in another one.
 STOP = set("""
 alla alle allo agli anche ancora avere aveva base bene caso come cosa cose cosi cioe con cui
 dalla dalle dallo dagli degli della delle dello dentro deve devono dopo dove dunque ecco
@@ -40,6 +43,14 @@ proprio puo quale quali quando quanto quella quelle quelli quello questa queste 
 questo quindi sara sempre senza sia sono solo sopra sotto stata stato stessa stesso sua
 sue sugli sulla sulle sullo suo suoi tale tali tanto tipo tra tutta tutte tutti tutto
 una uno viene vengono verso volta
+also another because been before being between both came come could did different does
+each even every first found from give have here into just know like made make many more
+most much must never only other over same should since some still such take than that
+their them then there these they thing think this those through time under very well
+were what when where which while who will with would your about after again against
+because before being below between both during each further here himself however itself
+just once only other same some such than that their them themselves then there these
+they those through under until upon while with within without
 """.split())
 
 

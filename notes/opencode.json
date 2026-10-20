@@ -1,59 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": {
-        "qwen2.5:7b": {
-          "name": "Qwen 2.5 7B (Locale)"
-        },
-        "qwen2.5:3b": {
-          "name": "Qwen 2.5 3B (Locale)"
-        },
-        "qwen2.5:1.5b": {
-          "name": "Qwen 2.5 1.5B (Locale)"
-        },
-        "qwen2.5-coder:7b": {
-          "name": "Qwen 2.5 Coder 7B (Locale)"
-        },
-        "qwen2.5-coder:3b": {
-          "name": "Qwen 2.5 Coder 3B (Locale)"
-        },
-        "llama3.1:8b": {
-          "name": "Llama 3.1 8B (Locale)"
-        },
-        "llama3.2:3b": {
-          "name": "Llama 3.2 3B (Locale)"
-        },
-        "llama3.2:1b": {
-          "name": "Llama 3.2 1B (Locale)"
-        },
-        "gemma2:9b": {
-          "name": "Gemma 2 9B (Locale)"
-        },
-        "gemma2:2b": {
-          "name": "Gemma 2 2B (Locale)"
-        }
-      }
-    }
-  },
+  "model": "opencode/nemotron-3-ultra-free",
   "default_agent": "notes",
   "instructions": [
     ".opencode/style.md",
-    "~/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md",
-    "~/.agents/skills/no-ai-slop/SKILL.md"
+    ".opencode/rules.md"
   ],
   "agents": {
-    "title": {
-      "model": "ollama/qwen2.5:7b"
-    },
-    "compaction": {
-      "model": "ollama/qwen2.5:7b"
-    }
+    "title": { "model": "opencode/minimax-m3.1-flash-free" },
+    "compaction": { "model": "opencode/nemotron-3-ultra-free" }
   },
   "lsp": false,
   "formatter": false,
@@ -65,19 +20,14 @@
   ],
   "mcp": {
     "servers": {
-      "obsidian-search": {
-        "type": "remote",
-        "url": "http://127.0.0.1:8848/mcp",
-        "disabled": false
-      }
+      "obsidian-search": { "type": "remote", "url": "http://127.0.0.1:8848/mcp", "disabled": false }
     }
   },
   "compaction": {
-    "auto": true
+    "auto": true,
+    "keep": { "tokens": 30000 }
   },
-  "experimental": {
-    "todo": true
-  },
+  "experimental": { "todo": true },
   "watcher": {
     "ignore": [
       "**/*.png",
@@ -99,10 +49,9 @@
     { "action": "edit", "resource": "*.md", "effect": "allow" },
     { "action": "edit", "resource": "*/esercizi/*", "effect": "deny" },
     { "action": "edit", "resource": "AGENTS.md", "effect": "deny" },
-    { "action": "edit", "resource": "Opencode_Guide.md", "effect": "deny" },
-    { "action": "edit", "resource": "chat_prompt.md", "effect": "deny" },
-    { "action": "edit", "resource": "opencode.json", "effect": "deny" },
     { "action": "edit", "resource": ".opencode/**", "effect": "deny" },
+    { "action": "edit", "resource": "prompt/*", "effect": "deny" },
+    { "action": "edit", "resource": "opencode.json", "effect": "deny" },
     { "action": "read", "resource": "*", "effect": "allow" },
     { "action": "read", "resource": "*.env", "effect": "deny" },
     { "action": "read", "resource": "*.env.*", "effect": "deny" },
@@ -121,11 +70,32 @@
     { "action": "shell", "resource": "wc*", "effect": "allow" },
     { "action": "shell", "resource": "grep*", "effect": "allow" },
     { "action": "shell", "resource": "rg*", "effect": "allow" },
+    { "action": "shell", "resource": "head*", "effect": "allow" },
+    { "action": "shell", "resource": "tail*", "effect": "allow" },
+    { "action": "shell", "resource": "cat*", "effect": "allow" },
+    { "action": "shell", "resource": "sort*", "effect": "allow" },
+    { "action": "shell", "resource": "uniq*", "effect": "allow" },
+    { "action": "shell", "resource": "cut*", "effect": "allow" },
+    { "action": "shell", "resource": "tr*", "effect": "allow" },
+    { "action": "shell", "resource": "jq*", "effect": "allow" },
+    { "action": "shell", "resource": "diff*", "effect": "allow" },
+    { "action": "shell", "resource": "basename*", "effect": "allow" },
+    { "action": "shell", "resource": "dirname*", "effect": "allow" },
+    { "action": "shell", "resource": "cd*", "effect": "allow" },
+    { "action": "shell", "resource": "pwd*", "effect": "allow" },
+    { "action": "shell", "resource": "which*", "effect": "allow" },
+    { "action": "shell", "resource": "echo*", "effect": "allow" },
+    { "action": "shell", "resource": "find*", "effect": "allow" },
+    { "action": "shell", "resource": "echo*>*", "effect": "deny" },
+    { "action": "shell", "resource": "find* -delete*", "effect": "deny" },
+    { "action": "shell", "resource": "find* -exec*", "effect": "deny" },
+    { "action": "shell", "resource": "find* -execdir*", "effect": "deny" },
     { "action": "shell", "resource": "git status*", "effect": "allow" },
     { "action": "shell", "resource": "git diff*", "effect": "allow" },
     { "action": "shell", "resource": "git log*", "effect": "allow" },
     { "action": "shell", "resource": "git show*", "effect": "allow" },
     { "action": "shell", "resource": "obsidian-mcp-search status*", "effect": "allow" },
+    { "action": "shell", "resource": "*env*", "effect": "deny" },
     { "action": "webfetch", "resource": "*", "effect": "allow" },
     { "action": "websearch", "resource": "*", "effect": "allow" },
     { "action": "subagent", "resource": "*", "effect": "allow" },

@@ -8,8 +8,12 @@ One book lives in books/<Course name>.pdf. Usage:
   books.py page FILE 28              text of page 28 (or 19-21)
   books.py search FILE "text"        pages in which the text appears
 
-The pages are read with the same engine as read-slides.py (pdftotext). It
-writes nothing in the vault.
+The pages are read with the same engine as read-slides.py (pdftotext, with the
+Docling fallback on the image pages). It writes nothing in the vault.
+
+Environment:
+  BOOKS_DIR    where the books are (default: books)
+  COURSES_DIR  where the courses are (default: every first-level folder)
 """
 import importlib.util
 import os
@@ -17,7 +21,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-BOOKS = os.path.join(ROOT, "books")
+BOOKS = os.path.join(ROOT, os.environ.get("BOOKS_DIR", "books"))
+COURSES_DIR = os.environ.get("COURSES_DIR", "")
 
 
 def _load_read_slides():
@@ -33,13 +38,54 @@ def fail(msg):
     sys.exit(1)
 
 
+def is_index_file(name):
+    return name.startswith("00") and name.lower().endswith(".md")
+
+
+def find_courses(base, depth=3):
+    """The course folders inside `base`.
+
+    A folder is a course when it holds a course index: a file starting with 00
+    whose name contains the name of the folder ("00 Index - Algebra.md" inside
+    "Algebra"). A folder with a general index instead ("00 General Index.md")
+    is a container: its subfolders are the courses.
+    """
+    found = []
+    if depth <= 0 or not os.path.isdir(base):
+        return found
+    try:
+        entries = os.listdir(base)
+    except OSError:
+        return found
+    indexes = [f for f in entries if is_index_file(f)]
+    subdirs = [d for d in entries
+               if not d.startswith(".") and os.path.isdir(os.path.join(base, d))]
+    if indexes:
+        name = os.path.basename(base.rstrip(os.sep))
+        if any(name.lower() in f.lower() for f in indexes):
+            return [name]
+        # a general index: the courses are the subfolders
+        for d in subdirs:
+            found.extend(find_courses(os.path.join(base, d), depth - 1))
+        return found
+    for d in subdirs:
+        found.extend(find_courses(os.path.join(base, d), depth - 1))
+    return found
+
+
 def courses():
-    if not os.path.isdir(ROOT):
+    """The course folders of the vault."""
+    base = os.path.join(ROOT, COURSES_DIR) if COURSES_DIR else ROOT
+    if not os.path.isdir(base):
         return []
+    found = sorted(set(find_courses(base)))
+    if found:
+        return found
+    # no index anywhere: fall back to the first-level folders
     return sorted(
-        name for name in os.listdir(ROOT)
-        if not name.startswith(".") and name != "books"
-        and os.path.isdir(os.path.join(ROOT, name))
+        name for name in os.listdir(base)
+        if not name.startswith(".") and name != os.path.basename(BOOKS)
+        and os.path.isdir(os.path.join(base, name))
     )
 
 
@@ -71,7 +117,7 @@ def resolve(arg):
         return candidate
     if not candidate.lower().endswith(".pdf") and os.path.isfile(candidate + ".pdf"):
         return candidate + ".pdf"
-    fail(f"book not found: {arg} (look in books/)")
+    fail(f"book not found: {arg} (look in {os.path.relpath(BOOKS, ROOT)}/)")
 
 
 def cmd_list():

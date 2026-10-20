@@ -1,59 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
-      },
-      "models": {
-        "qwen2.5:7b": {
-          "name": "Qwen 2.5 7B (Locale)"
-        },
-        "qwen2.5:3b": {
-          "name": "Qwen 2.5 3B (Locale)"
-        },
-        "qwen2.5:1.5b": {
-          "name": "Qwen 2.5 1.5B (Locale)"
-        },
-        "qwen2.5-coder:7b": {
-          "name": "Qwen 2.5 Coder 7B (Locale)"
-        },
-        "qwen2.5-coder:3b": {
-          "name": "Qwen 2.5 Coder 3B (Locale)"
-        },
-        "llama3.1:8b": {
-          "name": "Llama 3.1 8B (Locale)"
-        },
-        "llama3.2:3b": {
-          "name": "Llama 3.2 3B (Locale)"
-        },
-        "llama3.2:1b": {
-          "name": "Llama 3.2 1B (Locale)"
-        },
-        "gemma2:9b": {
-          "name": "Gemma 2 9B (Locale)"
-        },
-        "gemma2:2b": {
-          "name": "Gemma 2 2B (Locale)"
-        }
-      }
-    }
-  },
+  "model": "opencode/nemotron-3-ultra-free",
   "default_agent": "webdev",
   "instructions": [
     ".opencode/style.md",
-    "~/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md",
-    "~/.agents/skills/no-ai-slop/SKILL.md"
+    ".opencode/rules.md"
   ],
   "agents": {
-    "title": {
-      "model": "ollama/qwen2.5:7b"
-    },
-    "compaction": {
-      "model": "ollama/qwen2.5:7b"
-    }
+    "title": { "model": "opencode/minimax-m3.1-flash-free" },
+    "compaction": { "model": "opencode/nemotron-3-ultra-free" }
   },
   "plugins": [
     "@tarquinen/opencode-dcp@latest",
@@ -61,11 +16,10 @@
     "@azumag/opencode-rate-limit-fallback@2.1.0"
   ],
   "compaction": {
-    "auto": true
+    "auto": true,
+    "keep": { "tokens": 30000 }
   },
-  "experimental": {
-    "todo": true
-  },
+  "experimental": { "todo": true },
   "mcp": {
     "servers": {
       "playwright": {
@@ -81,6 +35,7 @@
   },
   "permissions": [
     { "action": "external_directory", "resource": "*", "effect": "deny" },
+    { "action": "doom_loop", "resource": "*", "effect": "deny" },
     { "action": "read", "resource": "*", "effect": "allow" },
     { "action": "read", "resource": "*.env", "effect": "deny" },
     { "action": "read", "resource": "*.env.*", "effect": "deny" },
@@ -113,6 +68,7 @@
     { "action": "shell", "resource": "kubectl*", "effect": "deny" },
     { "action": "shell", "resource": "docker push*", "effect": "deny" },
     { "action": "shell", "resource": "gh release*", "effect": "deny" },
+    { "action": "shell", "resource": "*env*", "effect": "deny" },
     { "action": "webfetch", "resource": "*", "effect": "allow" },
     { "action": "websearch", "resource": "*", "effect": "allow" },
     { "action": "subagent", "resource": "*", "effect": "allow" },

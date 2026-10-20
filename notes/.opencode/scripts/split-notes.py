@@ -12,6 +12,9 @@ section is the one of its first image (the names "Screenshot From 2026-03-05 ...
 "Pasted image 20260305..." contain it). Sections without images take the date of the
 previous section. Consecutive sections with the same date form a lesson.
 
+The date is only used to group the sections: it never goes into the file names nor
+into the index.
+
 The starting file is not touched. No existing file is overwritten.
 """
 import os
@@ -94,7 +97,7 @@ def group(sections, per_section):
         title = ", ".join(titles[:3]) + (" etc" if len(titles) > 3 else "")
         lez["title"] = title
         base = file_name(title)
-        lez["file"] = (f"{lez['date']} {base}" if lez["date"] else base) + ".md"
+        lez["file"] = base + ".md"
         lez["lines"] = sum(s["end"] - s["start"] for s in lez["sections"])
         lez["derived"] = all(s["derived"] for s in lez["sections"])
     seen = {}
@@ -126,15 +129,9 @@ def compose(lez, lines, level, nested):
     return text if text.endswith("\n") else text + "\n"
 
 
-def short_date(d):
-    y, m, d_ = d.split("-")
-    return f"{d_}/{m}/{y}"
-
-
 def index_line(lez):
     name = lez["file"][:-3]
-    date = short_date(lez["date"]) if lez["date"] else "date to insert"
-    return f"- {date} - [[{name}|{lez['title']}]]\n"
+    return f"- [[{name}|{lez['title']}]]\n"
 
 
 def main():
@@ -169,14 +166,14 @@ def main():
     for lez in lessons:
         note = ""
         if lez["date"] is None:
-            note = "   <- NO DATE: add it to the file name"
+            note = "   <- no image: group on its own, merge it by hand if needed"
         elif lez["derived"]:
-            note = "   <- date taken from the previous section"
+            note = "   <- grouped with the previous section"
         print(f"{lez['lines']:>5} lines  {lez['file']}{note}")
 
     existing = [lez["file"] for lez in lessons if os.path.exists(os.path.join(dest, lez["file"]))]
     if not write:
-        print("\nI wrote nothing. The dates come from the image names: they are approximate.")
+        print("\nI wrote nothing. The groups follow the images of each section: check them.")
         if existing:
             print(f"WARNING: {len(existing)} of these files already exist: with --write I would stop without creating anything.")
         print("To create the files: add --write. For one file per section: --per-section.")
@@ -208,7 +205,7 @@ def main():
         print(f"\nIndex created: {os.path.basename(index)}")
 
     print(f"Created {len(lessons)} files. The starting file is intact: when you have checked, archive it or delete it yourself.")
-    print("If a date is wrong, rename the file from Obsidian: the index links update by themselves.")
+    print("If a title or a name doesn't suit you, rename the file from Obsidian: the index links update by themselves.")
 
 
 if __name__ == "__main__":

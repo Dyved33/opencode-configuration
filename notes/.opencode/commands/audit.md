@@ -1,5 +1,5 @@
 ---
-description: Structural check of a note, a course or the whole vault (links, images, LaTeX, callouts, placeholders, todo). Modifies nothing
+description: Structural check of a note, of a course or of the whole vault (links, images, LaTeX, callouts, placeholders, todo). Modifies nothing
 ---
 
 This is the result of the structural check on: $ARGUMENTS (if empty, the whole vault).

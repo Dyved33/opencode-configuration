@@ -12,6 +12,9 @@ Both carry `AGENTS.md` and `opencode.json` at the top and everything else under
 `.opencode/`, which is where OpenCode looks for agents, commands, skills and
 instructions. No file inside them needs editing before the first run.
 
+Nothing is paid, no key is needed and no server has to be running: the default
+models are the free ones of OpenCode.
+
 ## Prerequisites
 
 Both configurations need **OpenCode v2**. The npm package is `@opencode/cli`: the
@@ -25,11 +28,6 @@ python3 --version                                             # python 3 for scr
 opencode plugin add @tarquinen/opencode-dcp@latest           # reduces token usage using old outputs 
 opencode plugin add @plannotator/opencode@latest             # reviews the plan
 opencode plugin add @azumag/opencode-rate-limit-fallback     # automatic fallback to secondary model on rate limit (429)
-
-# Ollama (local models for zero-token titles, compaction and fallbacks)
-ollama pull qwen2.5:7b                                        # balanced model (~4.7 GB)
-ollama pull qwen2.5:3b                                        # ultralight model for 8GB RAM machines (~1.9 GB)
-ollama pull qwen2.5-coder:7b                                  # coding model (~4.7 GB)
 ```
 
 Notes configuration only:
@@ -47,6 +45,16 @@ search server runs as a user service; see the "Semantic search" section below.
 The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
 start. On a machine without network that start fails: install them once by hand with
 `opencode plugin add <package>`.
+
+### Ollama is optional
+
+The free models of OpenCode are the default and need nothing installed. Ollama is only
+the last resort of the fallback chain, for a machine with no network:
+
+```bash
+ollama pull qwen2.5:7b                                        # balanced model (~4.7 GB)
+ollama pull qwen2.5-coder:7b                                  # coding model (~4.7 GB)
+```
 
 ## Check the machine
 
@@ -101,28 +109,35 @@ If a configuration is broken and OpenCode refuses to start:
 | Repo path | Installed path | What it is |
 |---|---|---|
 | `notes/AGENTS.md` | `AGENTS.md` | structure, 11 rules, tools table (read every session) |
-| `notes/opencode.json` | `opencode.json` | permissions (v2 ruleset), local Ollama provider, rate limit fallback, obsidian-search MCP server, experimental todowrite |
+| `notes/opencode.json` | `opencode.json` | permissions (v2 ruleset), free models, rate limit fallback, obsidian-search MCP server, experimental todowrite |
+| `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
+| `notes/.opencode/rules.md` | `.opencode/rules.md` | the writing discipline, loaded at every session: no filler text, one idea per block |
+| `notes/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
 | `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
 | `notes/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
-| `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
 | `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
 | `notes/.opencode/agents/reviewer.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
 | `notes/.opencode/commands/` | `.opencode/commands/` | `/lesson`, `/review`, `/audit`, `/slide`, `/split`, `/book` |
 | `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader (with Docling OCR fallback), structural audit, loss check, splitter, book reader |
-| `notes/Opencode_Guide.md` | `Opencode_Guide.md` | guide for the user, with examples and troubleshooting |
-| `notes/chat_prompt.md` | `chat_prompt.md` | short prompts for Antigravity and web chat |
+| `notes/prompt/` | `prompt/` | the guide for the user, the prompts for the external chats, the summary of the configuration |
 | `notes/books/` | `books/` | textbooks, one PDF per course (empty: you fill it) |
 | `notes/.gitignore` | `.gitignore` | lines merged into yours, never replacing them |
+
+The `rules.md` file is the reason anybody gets the same behaviour on a new machine: the
+two skills it condenses (`no-ai-slop` and `i-have-adhd`) live inside the payload, so
+they are always loaded and never have to be installed.
 
 ## `web/` — what is inside
 
 | Repo path | Installed path | What it is |
 |---|---|---|
 | `web/AGENTS.md` | `AGENTS.md` | structure, 10 rules, tools table (read every session) |
-| `web/opencode.json` | `opencode.json` | permissions (v2 ruleset), local Ollama provider, Playwright MCP, rate limit fallback, experimental todowrite |
+| `web/opencode.json` | `opencode.json` | permissions (v2 ruleset), free models, rate limit fallback, Playwright MCP, experimental todowrite |
+| `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
+| `web/.opencode/rules.md` | `.opencode/rules.md` | the writing discipline, loaded at every session |
+| `web/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
 | `web/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
 | `web/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
-| `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
 | `web/.opencode/agents/webdev.md` | `.opencode/agents/` | the agent that writes code (`default_agent`) |
 | `web/.opencode/agents/reviewer.md` | `.opencode/agents/` | reviews a change without touching it |
 | `web/.opencode/commands/` | `.opencode/commands/` | `/page`, `/review`, `/audit`, `/preview` |
@@ -140,13 +155,13 @@ a browser. What it is not: leave the project, deploy or publish anything
 push (only when you ask for it in that message, and then it asks for
 confirmation).
 
-The web payload shares the resource-saving keys of the notes one: the local
-model for titles and compaction (`agents.title` and `agents.compaction`, both
-`ollama/qwen2.5:7b`), `compaction` (`auto: true`) and rate-limit fallback.
-Unlike the notes config, `lsp` and `formatter` stay enabled and `shell` stays
-`allow` (npm, build, tests, Playwright); there are no `watcher` or Markdown-edit
-rules because it works on code. Both agents add an `## Efficiency` section and
-rule 10 ("No loops") tells the agent to stop and ask instead of retrying.
+The web payload shares the resource-saving keys of the notes one: the free
+models for titles and compaction (`agents.title` and `agents.compaction`), `compaction`
+(`auto: true`) and rate-limit fallback. Unlike the notes config, `lsp` and `formatter`
+stay enabled and `shell` stays `allow` (npm, build, tests, Playwright); there are no
+`watcher` or Markdown-edit rules because it works on code. Both agents add an
+`## Efficiency` section and rule 10 ("No loops") tells the agent to stop and ask
+instead of retrying.
 
 ## The choices, and why (notes)
 
@@ -178,13 +193,12 @@ runs the structural check.
 
 **`style.md` is always loaded** (the `instructions` field of `opencode.json`): a
 weak model sometimes skips reading, and the style is exactly the part that must
-not be skipped.
+not be skipped. `rules.md` is loaded the same way.
 
-**Fewer tokens, less noise.** The local model (`ollama/qwen2.5:7b`) answers titles
-and compaction with zero API token cost: it is set on the two built-in agents,
+**Fewer tokens, less noise.** The free models of OpenCode answer titles and
+compaction at zero API token cost: they are set on the two built-in agents,
 `agents.title` and `agents.compaction` (the old `small_model` key is deprecated and
-no longer read).
-`compaction` (`auto: true`) keeps the conversation inside the window.
+no longer read). `compaction` (`auto: true`) keeps the conversation inside the window.
 `lsp: false` and `formatter: false` are off because the vault
 is Markdown: no language servers, no formatting. `watcher.ignore` skips images,
 PDFs, slides, `.git` and `node_modules`, so file changes don't spam the session.
@@ -227,7 +241,7 @@ the server the agent falls back to `grep` and the structural audit.
 
 **Fallback & context pruning.** `@tarquinen/opencode-dcp` optimizes context
 by pruning stale outputs and duplicate calls. `@azumag/opencode-rate-limit-fallback`
-cycles automatically through secondary Ollama fallback models if a 429 rate limit
+cycles automatically through secondary models if a 429 rate limit
 is encountered, preventing task interruption.
 
 **The textbooks are a complement, not a source.** Books live in
@@ -246,7 +260,7 @@ copies the text verbatim; the model steps in afterwards, with `/review`, one not
 at a time.
 
 **Permissions.** The agent cannot edit `AGENTS.md`, `opencode.json`, the guide,
-`.opencode/` or anything inside `esercizi/` (`"*/esercizi/*": "deny"`, placed
+`prompt/`, `.opencode/` or anything inside `esercizi/` (`"*/esercizi/*": "deny"`, placed
 after `*.md` so that the last matching rule wins). `pdftoppm` (creates images) and
 `split-notes.py --write` (creates notes) ask for confirmation. Both
 configurations set `"external_directory": {"*": "deny"}`: the agent never leaves
@@ -256,6 +270,20 @@ the folder it was started in.
 you write (`.py`, `.html`, `.sql`). It is an input just like the slides: the agent
 reads it to link it from the notes, but it doesn't modify it and it doesn't run
 code.
+
+## The conventions you can change
+
+The payload works on any vault, and three things are configurable without touching
+the code:
+
+| What | How |
+|---|---|
+| the folder with the textbooks | `BOOKS_DIR` environment variable (default `books`) |
+| the folder that holds the courses | `COURSES_DIR` environment variable (default: found from the course indexes) |
+| the title of the final callout of a note | `NOTES_SUMMARY_TITLES` environment variable (default `summary,sintesi`) |
+
+The rest is in two files, and only in these two: `.opencode/style.md` (how the notes
+are written) and `.opencode/rules.md` (the writing discipline).
 
 ## Semantic search (notes)
 
@@ -291,18 +319,18 @@ stray folder in the cwd. Use the MCP server instead.
 
 ## Implementation details (notes)
 
-| 1 | date only in the file name | the `#` title has no date; the audit reports files without a date in the name; suggested format `2026-05-07 Automi a pila.md` |
+| 1 | the date is written nowhere | the file name says what the lesson is about (`Lezione 3-Ricerca su grafo.md`); the index lists the lessons with the wikilink and the title |
 | 2 | index and modules | `00 Index - <Course>.md` in every course or module folder |
 | 4 | one `.txt` per lesson | the agent looks for the `.txt` with the same name or the same date as the note, otherwise it asks |
 | 5 | git from the terminal | the guide uses `git diff` and `git restore` |
 | 6 | splitting single files | script `split-notes.py` and command `/split` |
-| 7 | `// adatta //` | replaces `// 400 //`: full-width image |
-| 7b | layout of an image without a placeholder | the agent asks a single `question` listing all the images in order (resize / adatta / caption sotto / testo a lato / lascia com'è), text from the OCR if available |
+| 7 | `// fit //` | the placeholder that replaces `// 400 //`: full-width image |
+| 7b | layout of an image without a placeholder | the agent asks a single `question` listing all the images in order (resize / fit / caption below / text at the side / leave it as it is), text from the OCR if available |
 | 9 | images inside callouts | stay as `![[x.png\|300]]` |
 | 10 | `→` in formulas | no conversion, no check |
 | 11 | only `// ... //` | `%% ... %%` removed everywhere |
 | 12 | em dash, web sources | INFO only in the audit; no source is cited |
-| 13 | summary at the end of the lesson | every note ends with `> [!info] Sintesi:` (3-6 points); the audit reports it if missing |
+| 13 | summary at the end of the lesson | every note ends with `> [!info] Summary:` (3-6 points); the audit reports it if missing |
 | 14 | length | no line limit: `style.md` asks for density. The audit reports single paragraphs over 150 words, as INFO |
 | 15 | configuration and file creation | the agent does not change the configuration and does not create notes |
 | 16 | reviewer | one pass, only with `/lesson` and `/review` |
@@ -313,9 +341,9 @@ stray folder in the cwd. Use the MCP server instead.
 confirmation. The script cuts on the `###` headings, derives the date of each
 section from the name of its first image and joins consecutive sections that
 share the same date. The dates come from the screenshots, so they are
-approximate: fix them by renaming the file from Obsidian. Then `/review` one note
-at a time: it trims, adds the summary and reports the word count before and
-after. Make a commit before you start.
+approximate: they are used to group the sections, never to name the files.
+Then `/review` one note at a time: it trims, adds the summary and reports the
+word count before and after. Make a commit before you start.
 
 Note that with a multi-agent system it is convenient to have smaller files (it
 also saves a fair amount of tokens).
@@ -325,6 +353,7 @@ also saves a fair amount of tokens).
 ```
 README.md      this file
 install.sh     copies notes/ or web/ into a target folder, with backup
+doctor.sh      checks that the machine can run the configuration
 notes/         complete payload for the notes vault
 web/           complete payload for a web project
 ```

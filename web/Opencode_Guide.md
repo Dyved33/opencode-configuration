@@ -19,10 +19,6 @@ npm install -g @opencode/cli@latest                # OpenCode v2 (the package 'o
 opencode plugin add @tarquinen/opencode-dcp@latest  # reduces tokens by pruning old outputs and duplicate calls
 opencode plugin add @plannotator/opencode@latest    # interactive plan review with annotations
 opencode plugin add @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
-
-# Ollama (local models for zero-token titles, compaction and coder fallbacks)
-ollama pull qwen2.5:7b                                # balanced model (~4.7 GB)
-ollama pull qwen2.5-coder:7b                          # coding model (~4.7 GB)
 ```
 
 The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
@@ -35,18 +31,35 @@ To check that everything is in place on a new machine:
 /path/to/opencode-configuration/doctor.sh web /path/to/this/project
 ```
 
+## The models
+
+Nothing to install and no key: the default models are free.
+
+| Role | Model |
+|---|---|
+| default | `opencode/nemotron-3-ultra-free` — the most disciplined of the free ones: it writes clean and doesn't touch files when not asked |
+| session title | `opencode/minimax-m3.1-flash-free` — the fastest |
+| compaction | `opencode/nemotron-3-ultra-free` |
+| last resort | `ollama/qwen2.5:7b`, `ollama/qwen2.5-coder:7b` — offline, but slow on CPU |
+
+Ollama is optional: it is only the end of the fallback chain, for a machine with no
+network. To use it: `ollama pull qwen2.5:7b` and `ollama pull qwen2.5-coder:7b`.
+
 ## How it is organized
 
 | File | What it is for |
 |---|---|
 | `AGENTS.md` | the few rules that always apply. It is read at every session |
 | `.opencode/style.md` | how the code must be written. It is loaded at every session |
+| `.opencode/rules.md` | the writing discipline: no filler text, one idea per block. It is loaded at every session |
 | `.opencode/agents/` | the 2 agents |
 | `.opencode/commands/` | the 4 commands |
-| `opencode.json` | permissions, local Ollama provider, rate limit fallback, MCP browser |
+| `.opencode/dcp.jsonc` | how the context is pruned |
+| `opencode.json` | permissions, models, rate limit fallback, MCP browser |
 | `Opencode_Guide.md` | this guide |
 
 To change the code conventions you edit only `.opencode/style.md`.
+To change the writing discipline you edit only `.opencode/rules.md`.
 
 ## The rules in one line
 

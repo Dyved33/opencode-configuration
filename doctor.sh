@@ -150,7 +150,7 @@ else
     fail "opencode.json is not valid JSON: OpenCode will not start"
   fi
 
-  for f in .opencode/style.md .opencode/agents .opencode/commands; do
+  for f in .opencode/style.md .opencode/rules.md .opencode/agents .opencode/commands; do
     if [ -e "$TARGET/$f" ]; then
       ok "$f"
     else
@@ -202,10 +202,10 @@ EOF
 
 # ------------------------------------------------------------------ Ollama ---
 
-section "Ollama (local model for titles and compaction)"
+section "Ollama (optional: it is only the last resort of the fallback chain)"
 
 if ! command -v ollama >/dev/null 2>&1; then
-  warn "ollama is not installed: the local model is not available"
+  warn "ollama is not installed: the fallback chain ends at the OpenRouter models"
   hint "install ollama, then: ollama pull qwen2.5:7b"
 elif ! port_open 127.0.0.1 11434; then
   warn "ollama is installed but not running"
@@ -213,7 +213,7 @@ elif ! port_open 127.0.0.1 11434; then
 elif ollama list 2>/dev/null | grep -q "qwen2.5:7b"; then
   ok "ollama is running and qwen2.5:7b is pulled"
 else
-  warn "the model qwen2.5:7b is not pulled: the titles and the compaction fall back to the remote model"
+  warn "the model qwen2.5:7b is not pulled: the last resort of the fallback chain is missing"
   hint "ollama pull qwen2.5:7b"
 fi
 
@@ -264,22 +264,21 @@ if [ "$PAYLOAD" = "notes" ]; then
   fi
 fi
 
-# ------------------------------------------------------------- Style skills ---
+# --------------------------------------------------------------- Style rules ---
 
-section "Style skills (optional, they make the writing tighter)"
+section "Writing rules (they are inside the configuration, nothing to install)"
 
-if [ -f "$HOME/.agents/skills/no-ai-slop/SKILL.md" ] || [ -f "$HOME/.config/opencode/skills/no-ai-slop/SKILL.md" ]; then
-  ok "no-ai-slop"
+if [ -n "$TARGET" ] && [ -f "$TARGET/.opencode/rules.md" ]; then
+  ok ".opencode/rules.md"
 else
-  warn "no-ai-slop is not installed: the filler text is not checked"
-  hint "copy the skill folder from the other machine to ~/.agents/skills/no-ai-slop/"
+  warn ".opencode/rules.md is missing: the anti-slop and layout rules won't be loaded"
+  hint "copy it from the payload: cp .opencode/rules.md \"$TARGET/.opencode/\""
 fi
 
-if [ -f "$HOME/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md" ]; then
-  ok "i-have-adhd"
+if [ -n "$TARGET" ] && [ -f "$TARGET/.opencode/dcp.jsonc" ]; then
+  ok ".opencode/dcp.jsonc"
 else
-  warn "i-have-adhd is not installed: the layout rules are missing"
-  hint "copy ~/.config/opencode/vendor/i-have-adhd/ from the other machine"
+  warn ".opencode/dcp.jsonc is missing: the context pruning uses its default settings"
 fi
 
 # ----------------------------------------------------------------- Summary ---

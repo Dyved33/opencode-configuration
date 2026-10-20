@@ -16,9 +16,24 @@ import sys
 
 ALLOWED_CALLOUTS = {"example", "info", "important", "warning", "tip", "todo"}
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"}
-EXCLUDED_DIRS = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images", "esercizi"}
-EXCLUDED_FILES = {"AGENTS.md", "Opencode_Guide.md", "chat_prompt.md", "README.md", "LEGGIMI.md"}
+# folders that never hold notes
+EXCLUDED_DIRS = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images", "esercizi",
+                 "rollback", ".review"}
+# folders not walked when the whole vault is indexed: the images and the exercises
+# are not notes, but they are still looked up when a link points to them
+SKIPPED_DIRS = {".git", ".obsidian", ".trash", "node_modules", "rollback", ".review"}
+EXCLUDED_PREFIXES = (".opencode-backup",)
+EXCLUDED_FILES = {"AGENTS.md", "Opencode_Guide.md", "chat_prompt.md", "README.md", "LEGGIMI.md",
+                  "CONFIG-CHANGES.md"}
 LONG_PARAGRAPH = 150  # words
+
+# the title of the final callout of the note. Change it if your vault calls it differently.
+SUMMARY_TITLES = tuple(t.strip().lower() for t in
+                       os.environ.get("NOTES_SUMMARY_TITLES", "summary,sintesi").split(",") if t.strip())
+
+# the folders that hold the courses, searched for the index and the lessons.
+# By default every first-level folder that is not excluded is a candidate.
+COURSES_DIR = os.environ.get("COURSES_DIR", "")
 
 AI_PHRASES = [
     "in questa lezione", "in questa nota", "in questa sezione", "in questa guida",
@@ -31,7 +46,6 @@ AI_PHRASES = [
 ]
 FORBIDDEN_TITLES = {"conclusioni", "conclusione", "concetti chiave", "riepilogo", "riassunto", "introduzione"}
 
-RE_DATE = re.compile(r"\b(\d{1,2}[/.\-_]\d{1,2}[/.\-_]\d{2,4}|\d{4}[/.\-_]\d{1,2}[/.\-_]\d{1,2})\b")
 RE_WIKILINK = re.compile(r"(!?)\[\[([^\]\|#\n]*)(#[^\]\|\n]*)?(\|[^\]\n]*)?\]\]")
 RE_IMG_HTML = re.compile(r"<img\b[^>]*?\bsrc\s*=\s*[\"']([^\"']+)[\"']", re.I)
 RE_CALLOUT = re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?(?:>\s*)+\[!([^\]]*)\]")
@@ -52,11 +66,16 @@ def find_root():
         d = up
 
 
+def excluded_dir(name):
+    return name in EXCLUDED_DIRS or name.startswith(EXCLUDED_PREFIXES)
+
+
 def scan(root):
     """All the vault files: lowercase basename -> list of paths."""
     by_name = {}
     for base, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in {".git", ".obsidian", ".trash", "node_modules"}]
+        dirs[:] = [d for d in dirs if d not in SKIPPED_DIRS
+                   and not d.startswith(EXCLUDED_PREFIXES)]
         for f in files:
             by_name.setdefault(f.lower(), []).append(os.path.join(base, f))
     return by_name
@@ -73,7 +92,7 @@ def notes_to_check(paths):
             print(f"ERROR {p}: path does not exist")
             continue
         for base, dirs, files in os.walk(p):
-            dirs[:] = sorted(d for d in dirs if d not in EXCLUDED_DIRS)
+            dirs[:] = sorted(d for d in dirs if not excluded_dir(d))
             for f in sorted(files):
                 if f.lower().endswith(".md") and f not in EXCLUDED_FILES:
                     out.append(os.path.join(base, f))
@@ -218,8 +237,6 @@ def check(path, by_name, root):
         out.append(("WARN", 1, "missing # heading at the top"))
     elif len(h1) > 1:
         out.append(("WARN", h1[1][0], "more than one # heading: only one allowed"))
-    if not index and not RE_DATE.search(os.path.basename(path)):
-        out.append(("WARN", 0, "the file name doesn't contain the lesson date (YYYY-MM-DD Title.md)"))
 
     # line by line
     open_divs = 0
@@ -288,7 +305,7 @@ def check(path, by_name, root):
 
     total_words = sum(len(r.split()) for r in text_only)
     if not index and total_words > 50:
-        # the note must end with the [!info] Sintesi callout
+        # the note must end with the [!info] Summary callout
         last = None
         for n, line in enumerate(text_only, 1):
             if RE_CALLOUT.match(line):
@@ -299,9 +316,9 @@ def check(path, by_name, root):
             ctype = RE_CALLOUT.match(head).group(1).strip().lower()
             title = re.sub(r"[*_]", "", head.split("]", 1)[1]).strip().lower()
             rest = [r for r in text_only[last:] if r.strip() and not r.lstrip().startswith(">")]
-            closes = ctype == "info" and title.startswith("sintesi") and not rest
+            closes = ctype == "info" and title.startswith(SUMMARY_TITLES) and not rest
         if not closes:
-            out.append(("WARN", 0, "the note doesn't end with the [!info] Sintesi: callout"))
+            out.append(("WARN", 0, "the note doesn't end with the [!info] Summary: callout"))
     return out, total_words
 
 

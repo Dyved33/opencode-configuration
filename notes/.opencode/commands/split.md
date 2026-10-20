@@ -9,7 +9,7 @@ This is the plan to split the file into one note per lesson. The script has not 
 
 Procedure:
 
-1. Show the plan as it is and ask for confirmation. The dates come from the image names and are approximate: point out the files without a date and the ones with the date taken from the previous section.
+1. Show the plan as it is and ask for confirmation. The image names are only used to group the sections: the date never goes into the file names nor into the index. Point out the groups without an image, which stay on their own.
 2. After the confirmation run the same command with `--write` at the end. The script copies the text: don't rewrite or copy the notes yourself.
 3. Run `python3 .opencode/scripts/vault-audit.py --short` on the folder and report only the counts.
 4. Don't trim the notes now. Close by saying that the next step is `/review` on one note at a time, and that the starting file must be archived or deleted by the user.

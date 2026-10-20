@@ -12,7 +12,7 @@ Only words that carry no information are removed: if dropping a sentence loses e
 
 Length has no limit: the content decides it. A long lesson or a difficult concept produce a long note, and that is right. What matters is density:
 
-- the same information is written once, where it is needed: if it is repeated identically in two places keep the most complete version;
+- the same information is written once, where it is needed: if it is repeated identically in two points keep the more complete version;
 - a difficult concept deserves all the explanation needed to understand it; a simple one gets a line;
 - the teacher's examples and the user's examples all stay; you add at most one of your own per concept, and only if it helps;
 - if a paragraph can be said in half the words without losing information, it must be said in half the words.
@@ -20,53 +20,53 @@ Length has no limit: the content decides it. A long lesson or a difficult concep
 Three kinds of text, and only these:
 
 - **Bare definition**: one sentence, formal, using the teacher's notation.
-- **Discursive explanation**: says *why* or *how* a step works, in simple words and even in the first person ("se mi trovo in $q_0$ e leggo $a$..."). It does not restate the definition in other words.
+- **Discursive explanation**: says *why* or *how* a step works, in simple words and even in the first person ("if I find myself in $q_0$ and read $a$..."). It does not restate the definition in other words.
 - **Callout**: examples, notes, warnings. They sit outside the flow of the text.
 
 ## What not to write
 
-- Introductions and closings: "In questa lezione vedremo", "In conclusione", "Come abbiamo visto".
-- Sections called "Introduzione", "Conclusioni", "Concetti chiave", "Riepilogo".
-- Empty emphasis: "è importante notare che", "fondamentale", "cruciale", "estremamente", "strettamente".
-- Fancy titles ("Il motore dell'infinito"): the title states the topic and nothing else.
+- Introductions and closings: "In this lesson we will see", "In conclusion", "As we have seen".
+- Sections called "Introduction", "Conclusions", "Key concepts", "Summary".
+- Empty emphasis: "it is important to note that", "fundamental", "crucial", "extremely", "strictly".
+- Fancy titles ("The Engine of Infinity"): the title states the topic and nothing else.
 - Every Word Capitalised in titles and labels.
 - Bold everywhere: it goes only on the term being defined, the first time.
-- Lists where every item is "**Label:** generic sentence". A list is for when the items really are parallel.
-- Callouts with titles like "Nota del Prof", "Approfondimento", "Contesto storico".
-- The same thing said twice. The only summary allowed is the Sintesi at the end of the note.
+- Lists where every item is "**Label:** generic sentence". A list is for when the elements really are parallel.
+- Callouts with titles like "Note from the Prof", "Further reading", "Historical context".
+- The same thing said twice. The only summary allowed is the Summary at the end of the note.
 
 ## Note structure
 
 ```markdown
-# Titolo della lezione
+# Title of the lesson
 
-## Argomento principale
-Testo.
+## Main topic
+Text.
 
-**Sotto-argomento:** testo che continua sulla stessa riga.
+**Sub-topic:** text that continues on the same line.
 
-> [!info] Sintesi:
-> - punto chiave
-> - punto chiave
+> [!info] Summary:
+> - key point
+> - key point
 ```
 
-- A single `#`, with the title. The date lives only in the file name (`2026-05-07 Automi a pila.md`), never in the text. No frontmatter, no tags.
+- A single `#`, with the title. The date is written neither in the file name nor in the note. No frontmatter, no tags.
 - `##` for the topics of the lesson. `###` only when a topic is really long. Never `####`.
-- Inside a section, to separate subtopics use the bold label at the start of the paragraph (`**Grafo di un automa:**`), not a heading.
+- Inside a section, to separate sub-topics use the bold label at the start of the paragraph (`**Graph of an automaton:**`), not a heading.
 - Titles without numbers, without bold, without emoji, capitalised only at the first letter.
 - No `---` lines between sections and no navigation section at the end.
-- The note always ends with a `> [!info] Sintesi:` callout: 3 to 6 points, one line each, with what should be remembered from the lesson. No new sentences and no long formulas. It is the last thing in the note and there is only one.
+- The note always ends with a `> [!info] Summary:` callout: 3 to 6 points, one line each, with what should be remembered from the lesson. No new sentences and no long formulas. It is the last thing in the note and there is only one.
 
 ## Labels
 
 In italics, at the start of the paragraph, followed by a colon:
 
-`*Definizione:*` `*Teorema:*` `*Lemma:*` `*Proposizione:*` `*Dimostrazione:*` `*Osservazione:*` `*Vantaggi:*` `*Svantaggi:*`
+`*Definition:*` `*Theorem:*` `*Lemma:*` `*Proposition:*` `*Proof:*` `*Observation:*` `*Advantages:*` `*Disadvantages:*`
 
 Other habits to keep:
 
 - Lists with `-`. Numbered lists only for steps in sequence.
-- The gloss with ` = ` after a formal term: `$Q$ è l'insieme degli stati = tutte le configurazioni che il dispositivo può assumere`.
+- The gloss with ` = ` after a formal term: `$Q$ is the set of states = all the configurations the device can take`.
 - `<u>...</u>` for the key sentence of a paragraph. At most one per section.
 - Italics for English terms and for the quoted technical term (*busy-waiting*, *semWait*).
 - Arrows, dots and symbols are free: `->`, `=>`, `→`, `…` are all fine.
@@ -78,13 +78,13 @@ Only these types, always in lowercase:
 | Type | Use |
 |---|---|
 | `[!example]` | example, worked exercise, image of a concrete case. Usually without a title. |
-| `[!info]` | plain-word explanation of a formal step (`In altre parole:`, `N.B.`) and the final summary of the note (`Sintesi:`) |
+| `[!info]` | plain-word explanation of a formal step (`In other words:`, `N.B.`) and the final summary of the note (`Summary:`) |
 | `[!important]` | the thing you cannot get wrong in the exam. Rare. |
-| `[!warning]` | typical mistake, edge case. Typical title: `Attenzione:` |
-| `[!tip]` | reminder. Typical title: `Ricorda` |
+| `[!warning]` | typical mistake, edge case. Typical title: `Careful:` |
+| `[!tip]` | reminder. Typical title: `Remember` |
 | `[!todo]` | a point to revisit. See below. |
 
-A callout does not repeat the text preceding it. `[!info] Sintesi:` is reserved for the closing of the note; to explain a difficult formal step in words use `[!info] In altre parole:`, in a few lines.
+A callout does not repeat the text preceding it. `[!info] Summary:` is reserved for the closing of the note; to explain a difficult formal step in words use `[!info] In other words:`, in a few lines.
 
 ## Formulas and code
 
@@ -108,9 +108,9 @@ Outside callouts every image uses one of these layouts. Which one to use is told
 | The user writes | Layout |
 |---|---|
 | `![[x.png]]` (no placeholder) | ask first, see below; resized to 300 unless the user picks another layout |
-| `![[x.png]] // adatta //` | fitted to the width of the page |
-| `![[x.png]] // sotto: testo //` | with a caption underneath |
-| `![[x.png]] // lato: testo //` | with text alongside. With `// lato //` and no text, the paragraph that follows goes alongside |
+| `![[x.png]] // fit //` | fitted to the width of the page |
+| `![[x.png]] // below: text //` | with a caption underneath |
+| `![[x.png]] // side: text //` | with text alongside. With `// side //` and no text, the paragraph that follows goes alongside |
 
 If the image has no placeholder — or if you are inserting it yourself with `pdftoppm` — ask which layout to use with the `question` tool: a single question listing all the images, in the order they appear, each with the layout choices. No question for images inside a callout and for images already inside a `<div>`: their layout is already decided (see below).
 
@@ -142,8 +142,8 @@ With a caption underneath:
 
 ```html
 <div style="text-align: center;">
-  <img src="x.png" alt="Immagine" />
-  <p>Testo</p>
+  <img src="x.png" alt="Image" />
+  <p>Text</p>
 </div>
 ```
 
@@ -155,7 +155,7 @@ With text alongside:
     <img src="x.png" style="width: 100%; border-radius: 8px;">
   </div>
   <div style="flex: 1.5;">
-  Testo
+  Text
   </div>
 </div>
 ```
@@ -171,7 +171,7 @@ Outside code blocks, `// ... //` is an instruction for you, to be carried out at
 | Placeholder | What to do |
 |---|---|
 | `// slide 28 //`, `// slide 19-21 //` | read those pages of the material and integrate the content here |
-| `// def X //`, `// tabella X //`, `// passaggi X //` | look for X in the material and bring it here |
+| `// def X //`, `// table X //`, `// steps X //` | look for X in the material and bring it here |
 | any other text | it is a request: go deeper, correct, add an example, etc. |
 
 The placeholder disappears only once it has been carried out. If you can't carry it out, replace it with a `[!todo]` saying what is missing.
@@ -179,7 +179,7 @@ The placeholder disappears only once it has been carried out. If you can't carry
 ## Todo
 
 ```markdown
-> [!todo] slide 28 non trovata in automi.pdf
+> [!todo] slide 28 not found in automi.pdf
 ```
 
 Leave a `[!todo]` when: a placeholder can't be resolved, the material and the notes contradict each other and you don't know who is right, a step looks wrong but you can't verify it. One line, concrete. On every pass try to close the `[!todo]` already there.
@@ -193,33 +193,33 @@ Link with a wikilink the lessons of the same course when a concept is explained 
 Not like this:
 
 ```markdown
-### **Il Time-Sharing: Una Rivoluzione Interattiva**
-Il **Time-sharing** (condivisione del tempo) è un paradigma fondamentale sviluppato per supportare la gestione di più lavori interattivi. È importante notare che:
-* **Condivisione fluida:** Il processore viene condiviso in modo fluido tra tutti gli utenti attivi.
-* **Accesso simultaneo:** L'accesso avviene simultaneamente attraverso l'uso di terminali.
+### **Time-Sharing: An Interactive Revolution**
+**Time-sharing** (sharing the time) is a fundamental paradigm developed to support the management of multiple interactive jobs. It is important to note that:
+* **Fluid sharing:** the processor is shared fluidly among all the active users.
+* **Simultaneous access:** access happens simultaneously through the use of terminals.
 
-> [!NOTE] Nota del Prof
-> Il time-sharing permette quindi a più utenti di usare contemporaneamente la stessa macchina.
+> [!NOTE] Note from the Prof
+> Time-sharing therefore allows several users to use the same machine at the same time.
 ```
 
 Like this:
 
 ```markdown
 ## Time-sharing
-Il processore viene condiviso fra più utenti collegati da terminale: il SO assegna a turno a ogni programma un *quanto di elaborazione*. L'obiettivo non è più massimizzare l'uso della CPU (multiprogrammazione) ma minimizzare il tempo di risposta.
+The processor is shared among several users connected through terminals: the OS assigns each program a *time slice* in turn. The goal is no longer to maximise CPU utilisation (multiprogramming) but to minimise response time.
 ```
 
 And this is the right register for definition, explanation and callout together:
 
 ```markdown
-## Semafori
-Meccanismo per sincronizzare l'accesso alle sezioni critiche. Un semaforo è formato da una variabile intera, una coda e tre operazioni:
-- Inizializzazione a un valore non negativo
-- *semWait:* decrementa il valore. Se diventa negativo, il processo è sospeso e messo in coda
-- *semSignal:* incrementa il valore. Se non diventa positivo, uno dei processi in coda è riattivato
+## Semaphores
+Mechanism for synchronising access to the critical sections. A semaphore is made of an integer variable, a queue and three operations:
+- Initialisation to a non-negative value
+- *semWait:* decrements the value. If it becomes negative, the process is suspended and queued
+- *semSignal:* increments the value. If it does not become positive, one of the queued processes is reactivated
 
-> [!info] In altre parole:
-> Quando il valore è positivo dice quanti processi possono ancora entrare, quando è negativo dice quanti sono in coda.
+> [!info] In other words:
+> When the value is positive it tells how many processes can still enter, when it is negative it tells how many are in the queue.
 
-*Osservazione:* il processo non può sapere in anticipo se con *semWait* sarà sospeso.
+*Observation:* the process cannot know in advance if it will be suspended by *semWait*.
 ```
