@@ -52,3 +52,14 @@ To have the note rewritten instead of checked:
 ```
 Rewrite the note following the attached style file. Keep every piece of information from the teacher and from me: you may remove only the words that carry no information. Carry out the // ... // placeholders. Don't create new files. Return the whole note.
 ```
+
+Rules:
+- follow style.md to the letter; if my notes and style.md say different things, mine prevail;
+- in the exam I must report what the teacher said: everything in my notes and in the material must stay in the note. You may fix the form, correct and add; you may remove only words that carry no information. In doubt, keep it;
+- if you are not sure about a content, do not invent: leave `> [!todo]` with what is missing;
+- image file names must be copied identically;
+- code that serves the theory stays in the note in a block; an exercise or a complete solution goes in a separate block with the `esercizi/` path to save it to.
+
+Return only the note in a markdown block, followed by a summary of at most 5 lines: what you added, corrected, removed, and the todos left.
+
+Lesson title: [TITLE]

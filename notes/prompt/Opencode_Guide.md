@@ -25,13 +25,9 @@ sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
 ```
 
-The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
-start: with no network the start fails, and `opencode plugin add <package>` installs them
-once, by hand.
+The plugins are also declared in `opencode.json`, so OpenCode installs them at the first start: with no network the start fails, and `opencode plugin add <package>` installs them once, by hand.
 
-Plannotator opens the plan in the browser at the end of the planning phase, to annotate
-it and approve it or send it back with changes. It is declared with options in
-`opencode.json`:
+Plannotator opens the plan in the browser at the end of the planning phase, to annotate it and approve it or send it back with changes. It is declared with options in `opencode.json`:
 
 ```json
 {
@@ -40,10 +36,7 @@ it and approve it or send it back with changes. It is declared with options in
 }
 ```
 
-`all-agents` gives the `submit_plan` tool to the project agents, so the plan is reviewed
-before anything is written. The default, `plan-agent`, leaves the tool to the built-in
-`plan` agent only; `user-managed` registers it without pushing the agents to use it.
-The `reviewer` agent runs as `mode: subagent` so it never gets the plan reminder.
+`all-agents` gives the `submit_plan` tool to the project agents, so the plan is reviewed before anything is written. The default, `plan-agent`, leaves the tool to the built-in `plan` agent only; `user-managed` registers it without pushing the agents to use it. The `reviewer` agent runs as `mode: subagent` so it never gets the plan reminder.
 
 To check that everything is in place on a new machine:
 
@@ -51,79 +44,85 @@ To check that everything is in place on a new machine:
 /path/to/opencode-configuration/doctor.sh notes /path/to/this/vault
 ```
 
-`pypdf` is for the book reader, `obsidian-mcp-search` for the semantic search server and
-`docling` for the OCR fallback on image-only PDFs. The search server is optional and runs
-as a user service (`systemctl --user status obsidian-mcp-search`).
+`pypdf` is for the book reader, `obsidian-mcp-search` for the semantic search server and `docling` for the OCR fallback on image-only PDFs. The search server is optional and runs as a user service (`systemctl --user status obsidian-mcp-search`).
 
 ## The models
 
 Nothing to install and no key: the default models are free.
 
-| Role | Model |
+| Model | What it is for |
 |---|---|
-| default | `opencode/nemotron-3-ultra-free` — the most disciplined of the free ones: it writes clean and doesn't touch files when not asked |
-| session title | `opencode/minimax-m3.1-flash-free` — the fastest |
-| compaction | `opencode/nemotron-3-ultra-free` — it summarises without losing the details of the note |
-| last resort | `ollama/qwen2.5:7b`, `ollama/qwen2.5-coder:7b` — offline, but slow on CPU |
+| `opencode/nemotron-3-ultra-free` | default: writes and revises the notes |
+| `opencode/minimax-m3.1-flash-free` | session title; the fastest |
+| `openrouter/*:free` | free OpenRouter models, integrated in the fallback chain |
+| `ollama/qwen2.5:3b` | last resort, offline and quota-free, runs on the GPU (GTX 1050) |
 
-Ollama is optional: it is only the end of the fallback chain, for a machine with no
-network. To use it: `ollama pull qwen2.5:7b` and `ollama pull qwen2.5-coder:7b`.
+The free tier of OpenCode asks for no credentials. OpenRouter asks for one (already saved). Other free providers can be added with `bash ~/.config/opencode/scripts/connect-free-providers.sh`: for each provider the command prints the link to create the key and then asks for it.
 
-**Fallback chain** (`.opencode/rate-limit-fallback.json`, 9 models): when the quota is
-exhausted or a provider fails, the agent moves to the next one, keeps working and goes
-back after the cooldown. The order is free OpenCode models, then free OpenRouter models,
-then Ollama.
+On OpenCode 2.x models are changed from the `/models` selector; the chosen model lasts for the session.
 
-## How it is organized
+### How the free models behave
 
-| File | What it is for |
-|---|---|
-| `AGENTS.md` | the rules that always apply. It is read at every session |
-| `.opencode/style.md` | how the notes must be written. It is loaded at every session |
-| `.opencode/rules.md` | the writing discipline: no filler text, one idea per block. It is loaded at every session |
-| `.opencode/agents/` | the 2 agents |
-| `.opencode/commands/` | the 6 commands |
-| `.opencode/scripts/` | the 5 scripts: slide reading (with Docling OCR fallback), structural check, loss check, splitting of single files, book reader |
-| `.opencode/dcp.jsonc` | how the context is pruned |
-| `opencode.json` | permissions, models, rate limit fallback, the obsidian-search server |
-| `prompt/` | this guide, the prompts for the external chats and the summary of the configuration |
-| `books/` | the textbooks, one PDF per course (input): read them with `/book` |
-| `<Course>/esercizi/` | the code you write (input): the agent doesn't touch it |
+Measured on the same tasks, free models are not interchangeable:
 
-To change the note style you edit only `.opencode/style.md`.
-To change the writing discipline you edit only `.opencode/rules.md`.
+| Model | Tools used | Quality | What to watch out for |
+|---|---|---|---|
+| `opencode/nemotron-3-ultra-free` | 4 | good, disciplined | searches well, doesn't invent |
+| `opencode/minimax-m3.1-flash-free` | 22 | good, verbose | writes files even when not asked; adds a "Riepilogo" |
+| `opencode/deepseek-v4.1-flash-free` | 9 | good | searches the wrong folders |
+| `opencode/glm-5.3-flash-free` | 10 | decent | contradicts itself, repeats a path |
+| `openrouter/thinkingmachines/inkling:free` | 4 | decent | says it did things it didn't do |
 
-## The rules in one line
+One thing to keep in mind when writing requests: **if you ask "write the text of X" to a free model, it can interpret it as "write X in the file"**. The default doesn't do that, but if it happens: `git diff` and `git restore "path"` to undo, as usual.
 
-- It writes only `.md` files, and it doesn't create notes: you create them and it fills them.
-- It never loses content: everything the teacher said stays in the note.
-- It doesn't touch the inputs: `.txt`, PDFs, slides, images, the books, the exercises.
-- It doesn't leave the vault and it doesn't commit or push.
-- It writes the final summary of the note and has it reviewed once, at the end of the lesson.
+### The automatic fallback
 
-## Searching by topic
+If a provider answers 429 (quota exhausted) or a transient error, the agent moves on its own to the next model in the chain and goes back when the quota frees up. The chain is in `.opencode/rate-limit-fallback.json` (in the vault) and in `~/.config/opencode/rate-limit-fallback.json` (in every project):
 
-Besides `grep`, the agent can search by meaning through the `obsidian-search` MCP server:
-it embeds the notes and returns the lessons closest to a query, so you can ask "where is
-the pumping lemma explained?" without knowing the exact words. The server runs in the
-background; to refresh it after bulk edits:
-
-```bash
-systemctl --user restart obsidian-mcp-search
+```
+opencode/nemotron-3-ultra-free
+opencode/minimax-m3.1-flash-free
+opencode/deepseek-v4.1-flash-free
+openrouter/thinkingmachines/inkling:free
+openrouter/minimax/minimax-m3.1-flash:free
+opencode/glm-5.3-flash-free
+openrouter/liquid/lfm-2.5-2.6b:free
+ollama/qwen2.5:3b
+ollama/qwen2.5-coder:3b
 ```
 
-## The flow of a lesson
+The switch keeps the active agent, the session and the context: the agent keeps working on the same task on the other model. After the last model in the chain the plugin returns to the first one and waits a time that doubles at each round (1, 2, 4 minutes, up to one hour). A message from the user puts the session back on its model.
 
-1. You create the note and, in the same folder, you put the raw notes (`.txt`, one per lesson), the slides and, in `images/`, the images. The file name says what the lesson is about (`Lezione 3-Ricerca su grafo.md`); the date is written nowhere.
-2. You write what you have in the note, with the `// ... //` placeholders where needed.
-3. While working you can ask for word-level changes: the agent writes, updates the index and checks the structure. It doesn't call the reviewer.
-4. When the lesson is finished you launch `/lesson`: it completes the note, writes the final summary, lets the reviewer run once and applies the corrections.
+The chain is in order of measured reliability: each model has been tried on four tasks before entering it. If a new model fails, remove it from the chain instead of leaving it: a fallback that makes mistakes costs more than a 429.
+
+## Token and context
+
+Every request carries the static context (rules, style, agent prompt) and re-sends it at every turn; the part that grows is the conversation. The figures for this vault:
+
+- static context: ~6.8k tokens per request (it was ~11.9k: the two skills were replaced by `.opencode/rules.md`, 530 tokens);
+- a long session (157 messages) had processed 13M tokens: now the DCP plugin prunes history above 120k tokens and leaves the last 3 turns untouched.
+
+Practical rules:
+
+1. **One session per lesson.** History is the main expense: `/compact` or a new session cuts more than any other setting.
+2. **The most disciplined model is also the cheapest.** The default makes 4 tool calls where another makes 22: tokens grow with tool calls.
+3. **`title` and `compaction` can use Ollama.** On this machine there is an NVIDIA GTX 1050 GPU: `qwen2.5:3b` answers in a few seconds. They remain the last resort for frequent tasks, but are usable for title and compaction without slowing down the session.
+
+## Loops
+
+A loop is the agent repeating the same thing and consuming tokens without progressing. Three defenses:
+
+- `doom_loop` is denied in `opencode.json`: after three identical calls OpenCode blocks the repetition;
+- rule 10 of `AGENTS.md` requires stopping after two equivalent attempts and asking, instead of retrying;
+- DCP warns the model before the context fills up (`iterationNudgeThreshold`), and deduplicates identical calls already made.
+
+In practice free models have not looped: zero repeated identical calls in all tests. The real problem is another: the model repeating a search with different words (for example `minimax` with 22 calls for a search `nemotron` does in 4) spends tokens without adding anything. If you see it, choose the most disciplined model for that task.
 
 ## Nothing is lost
 
-The rule is rule 2 of `AGENTS.md`: everything in your notes, in the raw notes and in the slides stays in the note; the agent only removes words. A written rule, though, is not enough, because a model can make mistakes: that is why the check is done by a script.
+The rule is rule 2 of `AGENTS.md`: everything in your notes, in the raw notes and in the teacher's material stays in the note; the agent only removes words. A written rule, though, is not enough, because a model can make mistakes: that is why the check is done by a script.
 
-1. before editing a note the agent saves a copy of it in `.opencode/originals/`;
+1. before modifying a note the agent saves a copy of it in `.opencode/originals/`;
 2. at the end `check-losses.py` compares the note against the copy, the raw notes and the slides, and lists what it can no longer find: formulas, lines of code, images, numbers, lines of text, slide pages. The code linked from the note by a wikilink (in `esercizi/`) counts as part of the note too;
 3. for every item the agent rereads the source and puts back what is missing.
 
@@ -141,8 +140,8 @@ The script compares words, not meanings, and cannot check slides made only of im
 **`/lesson`** closes the note of a lesson. The first path is the note, the others are raw notes or material; if they are missing it looks for them in the same folder.
 
 ```
-/lesson "Semester/Systems/Automata.md"
-/lesson "Semester/Systems/Automata.md" "Semester/Systems/automata.pdf"
+/lesson "Semester/Languages/Lesson 3 - Stack Automaton.md"
+/lesson "Semester/Languages/Lesson 3 - Stack Automaton.md" "Semester/Languages/automata.pdf"
 ```
 
 It understands by itself which case it is in:
@@ -161,53 +160,39 @@ It understands by itself which case it is in:
 **`/audit`** runs the structural check and reports the result. It modifies nothing.
 
 ```
-/audit                                  # the whole vault
-/audit "Semester/Systems"               # a course
+/audit                              # the whole vault
+/audit "Semester/Systems"           # a course
 ```
 
-It finds: broken links, missing images, unclosed formulas and code blocks, unbalanced `<div>`, wrong callouts, unresolved placeholders, lessons missing from the index, missing final summary, frontmatter and tags, titles that break the conventions, typical AI phrases, open `[!todo]`, very long paragraphs.
+It finds: broken links, missing images, unclosed formulas and code blocks, unbalanced `<div>`, wrong callouts, unresolved placeholders, lessons missing from the index, missing final summary, frontmatter and tags, titles out of convention, typical AI phrases, open `[!todo]`, very long paragraphs.
 
 **`/slide`** shows the text of a page of the material, so you can check it with your own eyes.
 
 ```
 /slide "Semester/Systems/automata.pdf" 28
 /slide "Semester/Systems/automata.pdf" 19-21
-/slide "Semester/Systems/automata.pptx" --search "pila vuota"
+/slide "Semester/Systems/automata.pptx" --search "stack empty"
 ```
 
-If the file is made only of images, `read-slides.py` retries with Docling (OCR) on its
-own, up to 60 pages (`READ_SLIDES_DOCLING_LIMIT` to change the limit,
-`READ_SLIDES_DOCLING_FORCE=1` to force it).
-
-**`/book`** reads a textbook in `books/`. It is a complement to the notes, never a default source: the agent asks for your consent before using it.
+**`/book`** reads a textbook in `books/`: list of books, summary, a page or a search for a text. The book remains a complement of the note, to be used only with your consent (rule 11 of `AGENTS.md`).
 
 ```
-/book list                                              books present and matched course
-/book "books/Introduction to AI.pdf" toc                table of contents (PDF bookmarks)
-/book "books/Introduction to AI.pdf" page 28            text of a page (or 19-21)
-/book "books/Introduction to AI.pdf" search "firewall"  pages containing the text
+/book list
+/book "books/Introduction to AI.pdf" toc
+/book "books/Introduction to AI.pdf" page 28
+/book "books/Introduction to AI.pdf" search "firewall"
 ```
 
-If a book has no bookmarks, `toc` says so and you fall back to `page` and `search`.
-
-**`/split`** splits a single notes file into one note per lesson. It is needed only once, for the notes written so far.
+**`/split`** divides a single notes file into one note per lesson. It is needed only once, for the notes written so far.
 
 ```
 /split "Semester/Systems/Notes course.md"
 /split "Semester/Systems/Notes course.md" --per-section
 ```
 
-It shows the plan first and only writes after your confirmation. See below.
+It shows the plan first and writes only after your confirmation. See below.
 
 Paths with spaces must always be quoted.
-
-## Converting old notes to the new format
-
-1. `/split "path/Notes course.md"`. The script cuts the file on the `###` headings, derives the date of each section from the name of its first image and puts consecutive sections with the same date into the same note. The text is copied identically, it doesn't go through the model.
-2. Check the plan. The dates are those of the screenshots, so they are approximate. The first sections usually have no images and stay on their own: merge them by hand if they belong together.
-3. Confirm: it creates the notes and the index in the same folder. The single file stays intact: archive it or delete it yourself when you have checked.
-4. If a title is wrong, rename the file from Obsidian: the index links update by themselves.
-5. `/review` on one note at a time. Every pass trims, adds the final summary and reports the word count before and after.
 
 ## What to write in the notes
 
@@ -231,28 +216,29 @@ The placeholder disappears once it has been carried out. If the agent can't, it 
 ![[x.png]] // side //              the paragraph that follows goes alongside
 ```
 
-If you don't write a placeholder, the agent asks you which layout to use, one question per image. The text for the caption or for the text alongside comes from the OCR or the agent asks you for it, and if you don't write it, it falls back to a resize.
+If you don't write a placeholder, the agent asks you which layout to use, one question per image. The text for the caption or for the text alongside comes from the OCR or the agent asks you for it, and if you don't write it falls back to a resize.
 
-Inside a callout the image stays `![[x.png|300]]`. The model cannot see the images: it never describes what they show unless your text or the OCR does.
+Inside a callout the image stays `![[x.png|300]]`. The model cannot see images: it never describes what they show unless your text or the OCR does.
 
-**Todo.** `> [!todo] cosa va rivisto` marks a point to check. The agent tries to close them on every pass and leaves new ones when it is not sure about something. `/audit` lists them all.
+**Todo.** `> [!todo] something to review` marks a point to check. The agent tries to close them on every pass and leaves new ones when it is not sure about something. `/audit` lists them all.
 
-**Summary.** Every note ends with `> [!info] Summary:`, 3 to 6 points. It is written by the agent with `/lesson` and `/review`.
+**Summary.** Every note closes with `> [!info] Summary:`, 3 to 6 points. It is written by the agent with `/lesson` and `/review`.
 
-**Code.** The snippet that serves the theory stays in the note, in a ```` ``` ```` block. The exercises and the complete solutions live in `esercizi/`, with the name you choose: the note keeps only the relevant piece with the wikilink `[[esercizi/es3.py|es3]]`. The files in `esercizi/` are yours: the agent never opens them for writing, and if you ask for an exercise it gives it to you in the answer and you save it.
+**Code.** The snippet that serves the theory stays in the note, in a ```` ``` ```` block. Exercises and complete solutions live in `esercizi/`, with the name you choose: the note keeps only the relevant piece with the wikilink `[[esercizi/es3.py|es3]]`. Files in `esercizi/` are yours: the agent never opens them for writing, and if you ask for an exercise it gives it to you in the answer and you save it.
 
 ## What OpenCode can and can't do
 
-- It writes only `.md` files. It cannot modify `AGENTS.md`, the files in `.opencode/`, the files in `prompt/` or anything in `esercizi/`.
-- It doesn't create notes: you create them and it fills them. It can only create the course index. The only exception is `/split`, which asks for confirmation.
-- It doesn't touch `.txt`, PDFs, slides, images and the files in `esercizi/`. It doesn't run code.
-- It doesn't leave the vault.
-- In the terminal it can only run the five scripts, `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext` and the read-only git commands. For `pdftoppm` (which creates images) it asks for confirmation.
-- It can search the web and the notes by topic (the `obsidian-search` server).
-- It keeps a todo list of the work in progress with the `todowrite` tool (an experimental OpenCode feature, enabled here with `"experimental": { "todo": true }`): you see it in the session and in the sidebar.
-- It doesn't commit or push: those stay with you.
+- Writes only `.md` files. It cannot modify `AGENTS.md`, the files in `.opencode/` nor anything in `esercizi/`.
+- Doesn't create notes: you create them and it fills them. It can create only the course index. The only exception is `/split`, which asks for confirmation.
+- Doesn't touch `.txt`, PDFs, slides, images and files in `esercizi/`. It doesn't run code.
+- Doesn't leave the vault.
+- In the terminal it can run only the five scripts (also `books.py`), `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext`, read-only git commands and server status commands `obsidian-mcp-search`. For `pdftoppm` (which creates images) it asks for confirmation. Slide reading as images with Docling happens inside `read-slides.py`.
+- Can search the web.
+- Doesn't commit or push: those stay with you.
 
-## The scripts, by hand too
+These restrictions are not only written: they are imposed by the `permissions` block of `opencode.json`. `edit` denies everything except `.md`, with explicit denial for `AGENTS.md`, `.opencode/**`, `esercizi/`, `opencode.json`, `CONFIG-CHANGES.md` and the two files of `prompt/`; `bash` denies everything except the commands in the allowlist above; `external_directory` prevents leaving the vault.
+
+## The scripts, also by hand
 
 ```bash
 python3 .opencode/scripts/read-slides.py FILE              # page list
@@ -265,7 +251,7 @@ python3 .opencode/scripts/check-losses.py NOTE             # what was lost compa
 python3 .opencode/scripts/check-losses.py NOTE --with SOURCE   # compared to a .txt or the slides
 python3 .opencode/scripts/split-notes.py FILE             # split plan
 python3 .opencode/scripts/split-notes.py FILE --write     # creates the notes
-python3 .opencode/scripts/books.py list                   # books and matched course
+python3 .opencode/scripts/books.py list                   # books present and matched course
 python3 .opencode/scripts/books.py info FILE              # pages, title, course
 python3 .opencode/scripts/books.py toc FILE               # table of contents
 python3 .opencode/scripts/books.py page FILE 28           # text of a page (or 19-21)
@@ -284,12 +270,48 @@ Two environment variables change where the scripts look:
 
 ## The opencode-parser plugin
 
-It adds the `parse` tool, which extracts the text from PDF, Word, PowerPoint and, with OCR, from images. It doesn't create or insert images. Here it is used for one thing only: reading the text inside a screenshot (`parse` with OCR in the language of the notes). For slides and PDF the agent uses `read-slides.py`, because `parse` returns the document from the start and not a precise page.
+It adds the `parse` tool, which extracts text from PDF, Word, PowerPoint and, with OCR, from images. It doesn't create or insert images. Here it is used for one thing only: reading the text inside a screenshot (`parse` with OCR in the language of the notes). For slides and PDF the agent uses `read-slides.py`, because `parse` returns the document from the start and not a precise page.
+
+## Semantic search (obsidian-search server)
+
+In the notes there is also a search by meaning, not only by exact word: asking "where is traffic protection discussed" finds the firewall lesson even if the word "firewall" is not in the question. It is the MCP server `obsidian-search` (`opencode.json`, section `mcp`), which indexes the notes of `Semester/` with a multilingual embedding model and searches them on `http://127.0.0.1:8848/mcp`. It exposes four tools: `list_vaults`, `search`, `read_note`, `reindex`.
+
+The server is a user systemd service (`~/.config/systemd/user/obsidian-mcp-search.service`), so it starts by itself at boot. Useful commands:
+
+```bash
+systemctl --user status obsidian-mcp-search     # status
+systemctl --user restart obsidian-mcp-search    # restart (reloads the index)
+obsidian-mcp-search status                      # indexed notes and blocks
+```
+
+The index updates by itself when a note changes (watcher). The model and the indexed notes are in the cache folder `~/.cache/obsidian-mcp-search/`. The agent uses it only to find linked lessons, not to read the file to modify.
+
+## The ACP plugin
+
+The plugin `@tuanhung303/opencode-acp` compacts the context by time, not only by size: as the conversation lengthens it removes old parts while keeping active constraints, so long work is not lost. It requires no configuration.
+
+## Context compaction
+
+As the conversation lengthens, OpenCode summarizes old parts on its own to free space in the model's context window. In `opencode.json` the `compaction` section sets:
+
+- `auto: true` — compacts automatically when the context is full (default: `true`);
+- `keep.tokens: 30000` — after the summary, 30k tokens of useful context remain, instead of starting from zero.
+
+There are also `reserved` (reserve tokens for compaction) and `preserve_recent_tokens` (recent tokens to keep). There is no fixed cadence "every N messages": compaction starts when the context fills up, and a summary at intervals would require a plugin calling `session.summarize`.
+
+The summary is done by the model indicated in `agents.compaction` (`opencode/nemotron-3-ultra-free`, 1M token window): the model must be able to keep the note in mind, not summarize it in pieces.
+
+This is in addition to the DCP plugin, which prunes the context as the session proceeds instead of waiting for compaction. It is tuned in `.opencode/dcp.jsonc`: it prunes also in subagent sessions, leaves the last 3 turns untouched, warns the model before the context fills up and deduplicates identical calls. Its values take precedence over the global ones in `~/.config/opencode/dcp.jsonc`.
 
 ## When something goes wrong
 
-- **An agent or a command doesn't appear:** restart OpenCode.
-- **OpenCode won't start because of a configuration error:** `OPENCODE_DISABLE_PROJECT_CONFIG=1 opencode`, fix `opencode.json` and restart. To see the configuration OpenCode actually loaded: `opencode debug config`.
+- **A plugin doesn't load:** check the OpenCode version and the plugin shape. OpenCode 1.x plugins (shape `{ id, server }`) don't load on 2.x (which accepts `{ id, effect }` or `{ id, setup }`): this is the case of `@omniroute/opencode-plugin`, removed from `opencode.json` awaiting 0.3.x.
+- **A provider answers 401 "Missing Authentication header":** the saved credential is not the right one. Check with `opencode auth list` and reconnect with `opencode auth login <provider>`.
+- **The 429 doesn't move to the next model:** look at the chain in `rate-limit-fallback.json`; if the failing model is not in the chain, the plugin leaves it to OpenCode, which retries it alone.
+- **A piped command is denied:** OpenCode checks permissions for every command in the chain, even `| head`. Missing rules are added in `opencode.json`, section `permissions`, as `shell` + `allow`, after the generic `deny` rule.
+- **Agent or command doesn't appear:** restart OpenCode.
+- **OpenCode doesn't start due to a configuration error:** `OPENCODE_DISABLE_PROJECT_CONFIG=1 opencode`, fix it and restart. To see the configuration OpenCode actually loaded: `opencode debug config`.
 - **The agent wrote too much or ruined a note:** `git diff` shows what changed, `git restore "path"` brings the note back to the last commit. Without git, the previous version is in `.opencode/originals/`. It is worth committing before `/review` and `/split`.
-- **An image inside a `<div>` is not visible:** check that the name in `src` is identical to the file's.
+- **An image in a `<div>` is not visible:** check that the name in `src` is identical to the file's. If it is right and still not visible, see `LEGGIMI.md`.
 - **Vague requests:** "improve the note" produces a random rewrite. Better "the section on semaphores is too long, trim it" or a placeholder in the right spot.
+- **Ollama:** on this machine there is an NVIDIA GTX 1050 GPU; small models (`qwen2.5:3b`, `qwen2.5:1.5b`) answer in a few seconds. Don't use 7b models for frequent tasks: they don't fit in 4 GB of VRAM and stay on CPU.
