@@ -133,7 +133,7 @@ The script compares words, not meanings, and cannot check slides made only of im
 | Agent | What it does | How to use it |
 |---|---|---|
 | `notes` | writes and edits the notes. It is the one active at startup | just write the request |
-| `reviewer` | checks a note (correctness, completeness, verbosity) and returns the list of corrections. It modifies nothing | runs by itself with `/lesson` and `/review`; by hand with `@reviewer` |
+| `reviewer` | checks a note (correctness, completeness, verbosity) and returns the list of corrections. It modifies nothing | runs by itself with `/lesson` and `/review`; by hand with `@reviewer` or with the command `/reviewer` |
 
 ## The commands
 
@@ -155,6 +155,12 @@ It understands by itself which case it is in:
 /review "Semester/Systems/Semaphores.md"
 /review "Semester/Systems/Semaphores.md" report only     # modifies nothing
 /review diff                                            # the notes modified and not yet committed
+```
+
+**`/reviewer`** runs the reviewer on a note without modifying it: returns the list of corrections (report-only). Useful to have a note checked at any time.
+
+```
+/reviewer "Semester/Systems/Semaphores.md"
 ```
 
 **`/audit`** runs the structural check and reports the result. It modifies nothing.

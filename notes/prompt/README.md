@@ -26,7 +26,7 @@ python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search
 | `../.opencode/style.md` | how the notes must be written. Loaded at every session |
 | `../.opencode/rules.md` | the writing discipline: no filler text, one idea per block. Loaded at every session |
 | `../.opencode/agents/` | the 2 agents |
-| `../.opencode/commands/` | the 6 commands |
+| `../.opencode/commands/` | the 7 commands |
 | `../.opencode/scripts/` | the 5 scripts: slide reading (with Docling OCR fallback), structural check, loss check, splitting of single files, book reader |
 | `../opencode.json` | permissions, models, rate limit fallback, the obsidian-search server |
 | `../books/` | the textbooks, one PDF per course (input): read them with `/book` |
@@ -50,6 +50,7 @@ To change the writing discipline you edit only `../.opencode/rules.md`.
 |---|---|
 | `/lesson` | completes the note of a lesson, closes it with the summary, checks it and has it reviewed |
 | `/review` | has a note reviewed and applies the corrections (it removes words, not content) |
+| `/reviewer` | runs the reviewer on a note without modifying anything (report-only, callable skill) |
 | `/audit` | the structural check of a note, a course or the whole vault. It modifies nothing |
 | `/slide` | shows the text of a page of the teacher's material |
 | `/book` | reads a textbook in `books/`. It is a complement, never a default source |

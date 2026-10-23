@@ -49,4 +49,4 @@ environment variable, default `books`).
 | Check that nothing was lost | `python3 .opencode/scripts/check-losses.py NOTE [--save] [--with SOURCE]` |
 | Split a single file into lessons | `python3 .opencode/scripts/split-notes.py FILE` |
 | Write and integrate notes | agent `notes` |
-| Correctness and style check | agent `reviewer`: modifies nothing, one pass at the end of a lesson |
+| Correctness and style check | agent `reviewer` and command `/reviewer`: modifies nothing, report-only; one pass at the end of a lesson |
