@@ -12,8 +12,9 @@ Both carry `AGENTS.md` and `opencode.json` at the top and everything else under
 `.opencode/`, which is where OpenCode looks for agents, commands, skills and
 instructions. No file inside them needs editing before the first run.
 
-Nothing is paid, no key is needed and no server has to be running: the default
-models are the free ones of OpenCode.
+The selector prefers zero-cost models and sends no paid comparison probes. Using
+OpenCode's free models requires an account; OpenRouter and Ollama are optional providers
+that need their own key or a local Ollama server. Semantic search is optional.
 
 ## Prerequisites
 
@@ -27,7 +28,7 @@ python3 --version                                             # python 3 for scr
 
 opencode plugin add @tarquinen/opencode-dcp@latest           # reduces token usage using old outputs 
 opencode plugin add @plannotator/opencode@latest             # reviews the plan
-opencode plugin add @azumag/opencode-rate-limit-fallback     # automatic fallback to secondary model on rate limit (429)
+opencode plugin add @azumag/opencode-rate-limit-fallback@2.1.0 # finite fallback on recognized errors
 ```
 
 Notes configuration only:
@@ -56,7 +57,7 @@ built-in `plan` one:
 ```json
 {
   "package": "@plannotator/opencode@latest",
-  "options": { "workflow": "all-agents" }
+  "options": { "workflow": "plan-agent", "planningAgents": ["plan"] }
 }
 ```
 
@@ -64,22 +65,27 @@ built-in `plan` one:
 
 | workflow | behaviour |
 |---|---|
-| `all-agents` | every primary agent submits the plan for review at the end of the planning phase (used here) |
-| `plan-agent` | default: the tool is available to the built-in `plan` agent only, the other agents lose it |
+| `all-agents` | every primary agent can submit plans |
+| `plan-agent` | the built-in `plan` agent and the listed `planningAgents` can submit plans |
 | `user-managed` | the tool is registered but nothing pushes the agents to use it |
 | `manual` | the tool is not registered at all |
 
-The reviewer agents run as `mode: subagent`: with `all-agents` the plugin injects the
-plan reminder into every primary agent, and a subagent never gets it.
+The notes `plan` agent is primary and cannot edit. Normal work goes to `notes`, which
+does not invoke Plannotator. The notes `reviewer` uses `mode: all`, so it appears in the
+agent selector and remains callable as a subagent.
 
 ### Ollama is optional
 
-The free models of OpenCode are the default and need nothing installed. Ollama is only
-the last resort of the fallback chain, for a machine with no network:
+The default is selected at startup by a local plugin from a ranked allowlist of
+zero-cost, tool-capable models in the active provider catalog. It checks OpenCode,
+OpenRouter and Ollama without sending probe requests. The catalog does not expose
+remaining credits or real-time health, so quota and gateway failures rely on the
+fallback chain. The plugin disables paid, non-tool and unlisted models, so no accidental
+paid fallback is selected; add models to the local router to change its free allowlist.
+`openrouter/free` chooses within OpenRouter only. Ollama is optional:
 
 ```bash
-ollama pull qwen2.5:7b                                        # balanced model (~4.7 GB)
-ollama pull qwen2.5-coder:7b                                  # coding model (~4.7 GB)
+ollama pull qwen2.5:3b                                        # optional local fallback
 ```
 
 ## Check the machine
@@ -139,7 +145,9 @@ If a configuration is broken and OpenCode refuses to start:
 | `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
 | `notes/.opencode/rules.md` | `.opencode/rules.md` | the writing discipline, loaded at every session: no filler text, one idea per block |
 | `notes/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
-| `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
+| `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | ordered fallback chain; stops when exhausted |
+| `notes/.opencode/agents/plan.md` | `.opencode/agents/` | plans only, submits via Plannotator, cannot edit |
+| `notes/.opencode/plugins/free-model-router/` | `.opencode/plugins/` | chooses the highest-ranked active free model without a probe request |
 | `notes/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
 | `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
 | `notes/.opencode/agents/reviewer.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
@@ -162,7 +170,8 @@ they are always loaded and never have to be installed.
 | `web/.opencode/style.md` | `.opencode/style.md` | code conventions: React, C#, accessibility, SEO, hygiene |
 | `web/.opencode/rules.md` | `.opencode/rules.md` | the writing discipline, loaded at every session |
 | `web/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
-| `web/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | fallback models and retry policy for rate limits (429) |
+| `web/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | ordered fallback chain; stops when exhausted |
+| `web/.opencode/plugins/free-model-router/` | `.opencode/plugins/` | chooses the highest-ranked active free model without a probe request |
 | `web/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
 | `web/.opencode/agents/webdev.md` | `.opencode/agents/` | the agent that writes code (`default_agent`) |
 | `web/.opencode/agents/reviewer.md` | `.opencode/agents/` | reviews a change without touching it |
@@ -265,10 +274,12 @@ by page. The first run downloads the OCR models.
 the agent finds a lesson by topic instead of by exact wording. It is optional: without
 the server the agent falls back to `grep` and the structural audit.
 
-**Fallback & context pruning.** `@tarquinen/opencode-dcp` optimizes context
-by pruning stale outputs and duplicate calls. `@azumag/opencode-rate-limit-fallback`
-cycles automatically through secondary models if a 429 rate limit
-is encountered, preventing task interruption.
+**Fallback & context pruning.** `@tarquinen/opencode-dcp` prunes stale outputs and
+duplicate calls. `@azumag/opencode-rate-limit-fallback` tries secondary models for
+errors it recognizes, then stops. The old `cycle` mode could retry indefinitely with
+increasing waits and is disabled. A bare `504 Gateway Timeout` is not guaranteed to
+match the plugin's detector. Provider timeouts are capped in both configs to limit
+stalled requests; native retries can still extend total elapsed time.
 
 **The textbooks are a complement, not a source.** Books live in
 `books/<Course name>.pdf`, one per course, and are read with `books.py` (command

@@ -1,7 +1,6 @@
 ---
 description: Writes and changes the code of this project: pages, components, styles, backend. To be used for any work that modifies code.
 mode: primary
-temperature: 0.2
 steps: 50
 permissions:
   - action: subagent

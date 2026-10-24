@@ -18,7 +18,7 @@ npm install -g @opencode/cli@latest                # OpenCode v2 (the package 'o
 
 opencode plugin add @tarquinen/opencode-dcp@latest  # reduces tokens by pruning old outputs and duplicate calls
 opencode plugin add @plannotator/opencode@latest    # interactive plan review with annotations
-opencode plugin add @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+opencode plugin add @azumag/opencode-rate-limit-fallback@2.1.0  # finite fallback on recognized errors
 ```
 
 The plugins are also declared in `opencode.json`, so OpenCode installs them at the first
@@ -33,17 +33,26 @@ To check that everything is in place on a new machine:
 
 ## The models
 
-Nothing to install and no key: the default models are free.
+No model is pinned in `opencode.json`. At startup, the local router chooses the highest-
+ranked zero-cost, tool-capable model available in OpenCode's current catalog. It sends
+no probe requests and does not see provider credits or health. If no zero-cost model is
+available, it leaves the request without a paid fallback.
+Paid, non-tool and unlisted models are disabled in the selector by design; edit the
+local plugin to expand the allowlist.
 
 | Role | Model |
 |---|---|
-| default | `opencode/nemotron-3-ultra-free` — the most disciplined of the free ones: it writes clean and doesn't touch files when not asked |
+| preference | `opencode/nemotron-3-ultra-free` — first choice when available |
 | session title | `opencode/minimax-m3.1-flash-free` — the fastest |
 | compaction | `opencode/nemotron-3-ultra-free` |
-| last resort | `ollama/qwen2.5:7b`, `ollama/qwen2.5-coder:7b` — offline, but slow on CPU |
+| last resort | `ollama/qwen2.5:3b` — offline; speed depends on hardware |
 
-Ollama is optional: it is only the end of the fallback chain, for a machine with no
-network. To use it: `ollama pull qwen2.5:7b` and `ollama pull qwen2.5-coder:7b`.
+Ollama is optional: it is only the end of the fallback chain. Pull the model you want
+to use (for example `ollama pull qwen2.5:3b`); response speed depends on your hardware.
+
+`openrouter/free` can choose an available free model within OpenRouter only. The fallback
+plugin handles recognized errors, but a bare 504 is not guaranteed to trigger it; the
+ordered chain stops instead of looping. Provider timeouts are capped in `opencode.json`.
 
 ## How it is organized
 
@@ -56,6 +65,7 @@ network. To use it: `ollama pull qwen2.5:7b` and `ollama pull qwen2.5-coder:7b`.
 | `.opencode/commands/` | the 4 commands |
 | `.opencode/dcp.jsonc` | how the context is pruned |
 | `opencode.json` | permissions, models, rate limit fallback, MCP browser |
+| `.opencode/plugins/free-model-router/` | selects a zero-cost tool-capable model from the current catalog |
 | `Opencode_Guide.md` | this guide |
 
 To change the code conventions you edit only `.opencode/style.md`.

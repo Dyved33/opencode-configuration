@@ -19,7 +19,7 @@ npm install -g @opencode/cli@latest                # OpenCode v2 (the package 'o
 opencode plugin add opencode-parser                 # reads photos of documents (parse tool)
 opencode plugin add @tarquinen/opencode-dcp@latest  # reduces tokens by pruning old outputs and duplicate calls
 opencode plugin add @plannotator/opencode@latest    # interactive plan review with annotations
-opencode plugin add @azumag/opencode-rate-limit-fallback  # automatic fallback to secondary model on rate limit (429)
+opencode plugin add @azumag/opencode-rate-limit-fallback@2.1.0  # finite fallback on recognized errors
 
 sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
@@ -32,11 +32,11 @@ Plannotator opens the plan in the browser at the end of the planning phase, to a
 ```json
 {
   "package": "@plannotator/opencode@latest",
-  "options": { "workflow": "all-agents" }
+  "options": { "workflow": "plan-agent", "planningAgents": ["plan"] }
 }
 ```
 
-`all-agents` gives the `submit_plan` tool to the project agents, so the plan is reviewed before anything is written. The default, `plan-agent`, leaves the tool to the built-in `plan` agent only; `user-managed` registers it without pushing the agents to use it. The `reviewer` agent runs as `mode: subagent` so it never gets the plan reminder.
+Only the `plan` agent submits plans to Plannotator. It cannot edit files. Normal work by `notes` skips planning; select `plan` explicitly when you want an approval step, then switch to `notes` after approval. The `reviewer` is selectable as a primary agent and remains available as a subagent.
 
 To check that everything is in place on a new machine:
 
@@ -48,22 +48,29 @@ To check that everything is in place on a new machine:
 
 ## The models
 
-Nothing to install and no key: the default models are free.
+No model is pinned in `opencode.json`. At startup, the local router selects the first
+zero-cost, tool-capable model it finds in a quality-ranked list, using providers
+currently present in the model catalog. It sends no test prompts. Catalog presence does
+not prove that a provider has remaining credits or is healthy; fallback handles only
+recognized failures.
+The router hides paid, non-tool and unlisted models to prevent accidental paid fallback;
+add candidates to its code to expand the allowlist.
 
 | Model | What it is for |
 |---|---|
-| `opencode/nemotron-3-ultra-free` | default: writes and revises the notes |
+| `opencode/nemotron-3.5-super-vl-free` | preferred when present for writing and revision |
+| `opencode/nemotron-3-ultra-free` | next choice: disciplined writing and tool use |
 | `opencode/minimax-m3.1-flash-free` | session title; the fastest |
 | `openrouter/*:free` | free OpenRouter models, integrated in the fallback chain |
-| `ollama/qwen2.5:3b` | last resort, offline and quota-free, runs on the GPU (GTX 1050) |
+| `ollama/qwen2.5:3b` | last resort, offline and quota-free; speed depends on hardware |
 
-The free tier of OpenCode asks for no credentials. OpenRouter asks for one (already saved). Other free providers can be added with `bash ~/.config/opencode/scripts/connect-free-providers.sh`: for each provider the command prints the link to create the key and then asks for it.
+OpenCode's free tier requires an account. OpenRouter requires a key; Ollama requires the model to be pulled locally. Only providers connected in this OpenCode installation are considered.
 
 On OpenCode 2.x models are changed from the `/models` selector; the chosen model lasts for the session.
 
 ### How the free models behave
 
-Measured on the same tasks, free models are not interchangeable:
+Models are not interchangeable. The router uses a curated preference order based on local note-writing checks; adjust it in `.opencode/plugins/free-model-router/index.ts` if your results differ:
 
 | Model | Tools used | Quality | What to watch out for |
 |---|---|---|---|
@@ -77,23 +84,24 @@ One thing to keep in mind when writing requests: **if you ask "write the text of
 
 ### The automatic fallback
 
-If a provider answers 429 (quota exhausted) or a transient error, the agent moves on its own to the next model in the chain and goes back when the quota frees up. The chain is in `.opencode/rate-limit-fallback.json` (in the vault) and in `~/.config/opencode/rate-limit-fallback.json` (in every project):
+For errors recognized by the fallback plugin, the request tries the next model in the ordered chain. When the chain is exhausted it stops; it does not cycle or wait for quota recovery. A bare `504 Gateway Timeout` is not guaranteed to match the plugin's detector, so fallback cannot promise recovery from every gateway error. The chain is in `.opencode/rate-limit-fallback.json` (in the vault):
 
 ```
+opencode/nemotron-3.5-super-vl-free
 opencode/nemotron-3-ultra-free
-opencode/minimax-m3.1-flash-free
 opencode/deepseek-v4.1-flash-free
+opencode/mimo-v2.6-flash-free
+opencode/glm-5.3-flash-free
+opencode/minimax-m3.1-flash-free
+openrouter/free
 openrouter/thinkingmachines/inkling:free
 openrouter/minimax/minimax-m3.1-flash:free
-opencode/glm-5.3-flash-free
-openrouter/liquid/lfm-2.5-2.6b:free
 ollama/qwen2.5:3b
-ollama/qwen2.5-coder:3b
 ```
 
-The switch keeps the active agent, the session and the context: the agent keeps working on the same task on the other model. After the last model in the chain the plugin returns to the first one and waits a time that doubles at each round (1, 2, 4 minutes, up to one hour). A message from the user puts the session back on its model.
+The plugin preserves the active task context while trying alternatives. After the last configured model fails, the request ends so you can inspect the error or choose another model manually.
 
-The chain is in order of measured reliability: each model has been tried on four tasks before entering it. If a new model fails, remove it from the chain instead of leaving it: a fallback that makes mistakes costs more than a 429.
+The chain is a best-effort availability order, not a live health or credit ranking. `openrouter/free` selects a free model within OpenRouter only. OpenCode does not expose cross-provider credit balances or compare note quality automatically. Provider request timeouts are capped in `opencode.json`; OpenCode retries may still add delay.
 
 ## Token and context
 

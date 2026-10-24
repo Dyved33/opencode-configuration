@@ -1,7 +1,6 @@
 ---
 description: Reviews changed or given code without modifying it. Verifies correctness, accessibility, SEO, security and style. To be called once when a change is finished, passing the paths of the files (or "diff").
 mode: all
-temperature: 0.1
 steps: 25
 permissions:
   - action: edit

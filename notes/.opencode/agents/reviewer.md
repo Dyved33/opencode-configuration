@@ -1,7 +1,6 @@
 ---
 description: Checks a note without modifying it. Verifies that the content is correct compared to the teacher's material, that nothing important is missing and that the style is not verbose. To be called once only, when the note of a lesson is finished, passing the path of the note and of the material.
-mode: subagent
-temperature: 0.1
+mode: all
 steps: 25
 permissions:
   - action: edit

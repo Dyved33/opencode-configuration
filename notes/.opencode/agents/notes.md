@@ -1,7 +1,6 @@
 ---
 description: Writes and integrates the lesson notes. Fills an existing note with the teacher's material, resolves the placeholders, writes a note from scratch starting from slides or PDF, trims notes that are too long. To be used for any work that modifies a note.
 mode: primary
-temperature: 0.2
 steps: 40
 permissions:
   - action: subagent
@@ -21,7 +20,7 @@ If a rule and `style.md` contradict each other, `style.md` wins. These rules hol
 
 ## Plan and review
 
-Before touching any file, write the plan and send it for review with the `submit_plan` tool: the user reads it in the browser, annotates it, and approves it or asks for changes. Wait for the decision before writing.
+For normal writing or correction requests, work directly and follow the procedure below; do not open Plannotator. If the user explicitly asks for a plan, stop before editing and tell them to select the `plan` agent. The `plan` agent submits the plan through Plannotator and cannot edit files. After approval, switch to `notes` to carry it out.
 
 `edits` is a JSON array of objects, not a string:
 
