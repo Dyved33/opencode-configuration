@@ -1,17 +1,19 @@
 {
   "enabled": true,
   "fallbackMode": "stop",
-  "otherModels": "ignore",
+  "cooldownMs": 60000,
+  "otherModels": "wait",
   "fallbackModels": [
     { "providerID": "opencode", "modelID": "nemotron-3.5-super-vl-free" },
     { "providerID": "opencode", "modelID": "nemotron-3-ultra-free" },
+    { "providerID": "opencode", "modelID": "nemotron-3.5-lightning-free" },
     { "providerID": "opencode", "modelID": "deepseek-v4.1-flash-free" },
     { "providerID": "opencode", "modelID": "mimo-v2.6-flash-free" },
     { "providerID": "opencode", "modelID": "glm-5.3-flash-free" },
-    { "providerID": "opencode", "modelID": "minimax-m3.1-flash-free" },
-    { "providerID": "openrouter", "modelID": "free" },
     { "providerID": "openrouter", "modelID": "thinkingmachines/inkling:free" },
-    { "providerID": "openrouter", "modelID": "minimax/minimax-m3.1-flash:free" },
+    { "providerID": "openrouter", "modelID": "nvidia/nemotron-3-ultra-550b-a55b:free" },
+    { "providerID": "openrouter", "modelID": "nvidia/nemotron-3-super-120b-a12b:free" },
+    { "providerID": "openrouter", "modelID": "openrouter/free" },
     { "providerID": "ollama", "modelID": "qwen2.5:3b" }
   ]
 }
