@@ -5,19 +5,26 @@
     "openrouter": { "settings": { "headerTimeout": 60000, "chunkTimeout": 90000, "timeout": 180000 } },
     "ollama": { "settings": { "headerTimeout": 60000, "chunkTimeout": 90000, "timeout": 180000 } }
   },
-  "default_agent": "notes",
+  "default_agent": "plan",
   "instructions": [
     ".opencode/style.md",
     ".opencode/rules.md"
   ],
   "agents": {
-    "title": { "model": "opencode/minimax-m3.1-flash-free" },
-    "compaction": { "model": "opencode/nemotron-3-ultra-free" },
-    "plan": {
+    "notes": {
       "mode": "primary",
       "model": "opencode/nemotron-3-ultra-free",
       "permissions": [
-        { "action": "edit", "resource": "*", "effect": "deny" }
+        { "action": "subagent", "resource": "*", "effect": "deny" },
+        { "action": "subagent", "resource": "reviewer", "effect": "allow" }
+      ]
+    },
+    "reviewer": {
+      "mode": "all",
+      "model": "opencode/nemotron-3-ultra-free",
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "subagent", "resource": "*", "effect": "deny" }
       ]
     }
   },
