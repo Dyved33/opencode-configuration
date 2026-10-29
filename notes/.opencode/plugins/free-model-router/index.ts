@@ -1,7 +1,8 @@
 import { Plugin } from "@opencode/plugin"
 
-// Prefer the best known free models for note writing, in order. This only sees
-// models available in OpenCode's current catalog, not provider credit balances.
+// Preferisce, in ordine, i migliori modelli free noti per la scrittura delle
+// note. Vede solo i modelli presenti nel catalogo corrente di OpenCode, non i
+// saldi di credito dei provider.
 const preferred = [
   ["opencode", "nemotron-3.5-super-vl-free"],
   ["opencode", "nemotron-3-ultra-free"],
@@ -19,7 +20,7 @@ const free = (model: { cost?: readonly { input: number; output: number }[] }) =>
   model.cost?.length > 0 && model.cost.every((tier) => tier.input === 0 && tier.output === 0)
 
 export default Plugin.define({
-  id: "notes.free-model-router",
+  id: "appunti.free-model-router",
   async setup(ctx) {
     await ctx.model.transform((editor) => {
       const models = editor.list()

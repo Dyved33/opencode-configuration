@@ -7,21 +7,19 @@
   },
   "default_agent": "plan",
   "instructions": [
-    ".opencode/style.md",
-    ".opencode/rules.md"
+    ".opencode/stile.md",
+    ".opencode/regole.md"
   ],
   "agents": {
-    "notes": {
+    "appunti": {
       "mode": "primary",
-      "model": "opencode/nemotron-3-ultra-free",
       "permissions": [
         { "action": "subagent", "resource": "*", "effect": "deny" },
-        { "action": "subagent", "resource": "reviewer", "effect": "allow" }
+        { "action": "subagent", "resource": "revisore", "effect": "allow" }
       ]
     },
-    "reviewer": {
+    "revisore": {
       "mode": "all",
-      "model": "opencode/nemotron-3-ultra-free",
       "permissions": [
         { "action": "edit", "resource": "*", "effect": "deny" },
         { "action": "subagent", "resource": "*", "effect": "deny" }
@@ -37,16 +35,27 @@
       "package": "@plannotator/opencode@latest",
       "options": { "workflow": "plan-agent", "planningAgents": ["plan"] }
     },
-    "@azumag/opencode-rate-limit-fallback@2.1.0"
+    "@azumag/opencode-rate-limit-fallback@2.1.1"
   ],
   "mcp": {
     "servers": {
-      "obsidian-search": { "type": "remote", "url": "http://127.0.0.1:8848/mcp", "disabled": false }
+      "obsidian-search": { "type": "remote", "url": "http://127.0.0.1:8848/mcp", "protocol": "auto", "disabled": false }
+    }
+  },
+  "tools": {
+    "obsidian-search*": "deny"
+  },
+  "agent": {
+    "appunti": {
+      "tools": { "obsidian-search*": "allow" }
+    },
+    "revisore": {
+      "tools": { "obsidian-search*": "allow" }
     }
   },
   "compaction": {
     "auto": true,
-    "keep": { "tokens": 30000 }
+    "keep": { "tokens": 12000 }
   },
   "experimental": { "todo": true },
   "watcher": {
@@ -70,19 +79,19 @@
     { "action": "edit", "resource": "*.md", "effect": "allow" },
     { "action": "edit", "resource": "*/esercizi/*", "effect": "deny" },
     { "action": "edit", "resource": "AGENTS.md", "effect": "deny" },
-    { "action": "edit", "resource": ".opencode/**", "effect": "deny" },
-    { "action": "edit", "resource": "prompt/*", "effect": "deny" },
-    { "action": "edit", "resource": "opencode.json", "effect": "deny" },
+    { "action": "edit", "resource": ".opencode/stile.md", "effect": "deny" },
+    { "action": "edit", "resource": "prompt/prompt_chat.md", "effect": "deny" },
+    { "action": "edit", "resource": "prompt/README.md", "effect": "deny" },
     { "action": "read", "resource": "*", "effect": "allow" },
     { "action": "read", "resource": "*.env", "effect": "deny" },
     { "action": "read", "resource": "*.env.*", "effect": "deny" },
     { "action": "shell", "resource": "*", "effect": "deny" },
     { "action": "shell", "resource": "python3 .opencode/scripts/vault-audit.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/read-slides.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/books.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/check-losses.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/split-notes.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/split-notes.py*--write*", "effect": "ask" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/leggi-slide.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/libri.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/controlla-perdite.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/dividi-appunti.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/dividi-appunti.py*--scrivi*", "effect": "ask" },
     { "action": "shell", "resource": "pdfinfo*", "effect": "allow" },
     { "action": "shell", "resource": "pdftotext*", "effect": "allow" },
     { "action": "shell", "resource": "pdftoppm*", "effect": "ask" },

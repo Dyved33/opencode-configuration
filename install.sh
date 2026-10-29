@@ -185,7 +185,7 @@ echo "  2. start opencode (restart it if it is already running)"
 echo "  3. opencode debug config    # to see what OpenCode actually loaded"
 if [ "$PAYLOAD_NAME" = "notes" ]; then
   echo "  4. prerequisites for the notes config:"
-  echo "       opencode plugin add opencode-parser"
+  echo "       opencode plugin add opencode-parser opencode-obsidian-vault"
   echo "       sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils"
   echo "       python3 -m pip install --user --break-system-packages pypdf \"obsidian-mcp-search[server]\" docling"
 fi

@@ -1,52 +1,49 @@
 # AGENTS.md
 
-Obsidian vault of university notes. One note = one lesson.
+Vault Obsidian di appunti universitari. Una nota = una lezione.
 
-## Structure
+## Struttura
 
 ```
-books/                          textbooks, one PDF per course (input)
-<Semester>/                     a folder that groups the courses
-  <Course>/                     a course (or <Course>/<Module>/ if the course has modules)
-    00 Index - <Course>.md     index: one line per lesson, with the title
-    Lesson N - Title.md        one note per lesson, created by the user
-    *.txt                      raw notes, one per lesson (input)
-    *.pdf, *.ppt, *.pptx       teacher's material (input)
-    images/                    note images (input)
-    esercizi/                  code written by the user (input), subfolders too
+libri/                         libri di testo, un PDF per corso (input)
+primo semestre/
+  <Corso>/                     un corso (o <Corso>/<Modulo>/ se il corso ha più moduli)
+    00 Indice - <Corso>.md     indice: una riga per lezione, con titolo
+    Titolo.md                  una nota per lezione, creata dall'utente
+    *.txt                      appunti grezzi, uno per lezione (input)
+    *.pdf, *.ppt, *.pptx       materiale del docente (input)
+    images/                    immagini delle note (input)
+    esercizi/                  codice scritto dall'utente (input), anche in sottocartelle
+rollback/                      vecchi file monolitici, prima della divisione in lezioni: non sono note
+.review/                       lavori di revisione: non sono note
 ```
 
-The courses are the folders that contain the lessons: search, grep and index them,
-not the rest of the vault. The name of the semester folder is yours: the agent finds
-the courses by looking for the folders that hold a `00 Index - ....md` file.
+Le note sono solo dentro `primo semestre/`: cerca, greppa e indicizza lì, non nel resto del vault.
 
-The textbooks live in `books/` (the name is configurable with the `BOOKS_DIR`
-environment variable, default `books`).
+## Regole che valgono sempre
 
-## Rules that always apply
+1. **Stile.** Le regole di scrittura sono in `.opencode/stile.md`. OpenCode le carica da solo; con altri strumenti o altri modelli leggile prima di scrivere, insieme alle skill `~/.agents/skills/no-ai-slop/SKILL.md` (niente testo di riempimento) e `~/.config/opencode/vendor/i-have-adhd/skills/i-have-adhd/SKILL.md` (impaginazione: un'idea per blocco, la risposta in prima, elenchi invece della prosa). Valgono per ogni modello, anche piccolo o scelto in automatico.
+2. **Non si perde nulla.** Ogni informazione che sta negli appunti dell'utente, negli appunti grezzi o nel materiale del docente deve stare nella nota finale: all'esame va riportato ciò che ha detto il docente. Puoi sistemare lo stile, riordinare, correggere e aggiungere. Puoi togliere solo parole: riempitivi e ripetizioni della stessa informazione. Nel dubbio, tieni.
+3. **Il testo dell'utente comanda.** In una nota esistente modifica solo ciò che è sbagliato, poco chiaro, mancante o indicato da un segnaposto. Non riscrivere ciò che funziona.
+4. **Non creare file.** Le note delle lezioni le crea l'utente, tu le riempi: né note né codice. Unica eccezione l'indice del corso, se manca, e le foto delle slide che l'utente ha chiesto (tabella Strumenti). Se ti chiedono di scrivere un esercizio, il codice va nella risposta, in un blocco con l'etichetta del linguaggio, con il percorso `esercizi/` in cui salvarlo: tu non aprire quei file in scrittura.
+5. **Gli input non si toccano.** Mai modificare, rinominare, spostare o cancellare `.txt`, PDF, slide, immagini, i libri in `libri/` e i file in `esercizi/`.
+6. **Niente frontmatter e niente tag.**
+7. **Fonti.** Prima il materiale del docente, poi il web per completare. Se si contraddicono vale il docente e lasci un `[!todo]`.
+8. **Git in sola lettura.** Commit e push li fa l'utente.
+9. **Riepilogo finale.** Chiudi ogni lavoro con al massimo 5 righe: file toccati, cosa hai aggiunto, corretto e tolto, `[!todo]` lasciati.
+10. **Stop sui cicli.** Se la stessa azione fallisce dopo due tentativi equivalenti (anche con input diverso) o non porta progressi o dopo un timeout, fermati e chiedi all'utente invece di riprovare. Un altro tentativo aggiunge costo, non certezza. Niente tesseract in parallelo.
+11. **Libri di testo.** I libri stanno in `libri/<Nome corso>.pdf`, uno per corso, e si leggono con `python3 .opencode/scripts/libri.py` (command `/libro`). Una nota è completa senza il libro: è un complemento, non una fonte di default. Non prendere nulla dal libro senza il consenso dell'utente: a lezione conclusa chiedi una volta, con il tool `question`, se integrarlo come complemento; se dice no, il libro resta fuori. Quando lo usi valgono la regola 2 e la regola 7.
 
-1. **Style.** The writing rules are in `.opencode/style.md`, the writing discipline in `.opencode/rules.md`. OpenCode loads both by itself; with other tools or other models read them before writing. They apply to every model, even a small one or one chosen automatically.
-2. **Nothing is lost.** Every piece of information in the user's notes, in the raw notes or in the teacher's material must be in the final note: in the exam what the teacher said has to be reproduced. You may fix the style, reorder, correct and add. You may remove only words: fillers and repetitions of the same information. When in doubt, keep it.
-3. **The user's text rules.** In an existing note touch only what is wrong, unclear, missing or indicated by a placeholder. Don't rewrite what works.
-4. **Don't create files.** The user creates the lesson notes, you fill them: neither notes nor code. The only exceptions are the course index, if it is missing, and the slide photos the user asked for (Tools table). If you are asked to write an exercise, the code goes in the answer, in a block labelled with the language, together with the `esercizi/` path to save it to: never open those files for writing.
-5. **Inputs are not touched.** Never modify, rename, move or delete `.txt`, PDFs, slides, images, the books in `books/` and the files in `esercizi/`.
-6. **No frontmatter and no tags.** The date is written neither in the file name nor in the note.
-7. **Sources.** First the teacher's material, then the web to complete. If they contradict each other, the teacher wins and you leave a `[!todo]`.
-8. **Git in read-only.** Commits and pushes are up to the user.
-9. **Final summary.** Close every job with at most 5 lines: files touched, what you added, corrected and removed, the `[!todo]` you left.
-10. **Stop on loops.** If the same action fails after two consecutive attempts (even with different inputs) or brings no progress or after a timeout, stop and ask the user instead of retrying. Another attempt adds cost, not certainty. No parallel tesseract.
-11. **Textbooks.** The books live in `books/<Course name>.pdf`, one per course, and are read with `python3 .opencode/scripts/books.py` (command `/book`). A note is complete without the book: it is a complement, not a default source. Take nothing from the book without the user's consent: when the lesson is over ask once, with the `question` tool, whether to integrate it as a complement; if they say no, the book stays out. When you use it, rules 2 and 7 apply.
+## Strumenti
 
-## Tools
-
-| What | How |
+| Cosa | Come |
 |---|---|
-| Read slides and PDFs | `python3 .opencode/scripts/read-slides.py FILE [pages]` (image pages are read with Docling/OCR) |
-| Read a textbook | `python3 .opencode/scripts/books.py` with `list`, `info FILE`, `toc FILE`, `page FILE 28`, `search FILE "text"` (command `/book`) |
-| Search a lesson by topic | MCP server `obsidian-search` (tool `search`), or `python3 .opencode/scripts/vault-audit.py` for the structure |
-| Photo of a slide | ask the user whether to take it (`pdftoppm*` asks for confirmation); if yes: `pdftoppm -png -r 150 -f N -l N "FILE" "images/slide"` and read the description with `tesseract "images/slide-NN.png" stdout -l <lang>` (`<lang>` is the language of the notes, `it` for Italian); if no: move on |
-| Structural check | `python3 .opencode/scripts/vault-audit.py [path]` |
-| Check that nothing was lost | `python3 .opencode/scripts/check-losses.py NOTE [--save] [--with SOURCE]` |
-| Split a single file into lessons | `python3 .opencode/scripts/split-notes.py FILE` |
-| Write and integrate notes | agent `notes` |
-| Correctness and style check | agent `reviewer` and command `/reviewer`: modifies nothing, report-only; one pass at the end of a lesson |
+| Leggere slide e PDF | `python3 .opencode/scripts/leggi-slide.py FILE [pagine]` (le pagine immagine vengono lette con Docling/OCR) |
+| Leggere un libro di testo | `python3 .opencode/scripts/libri.py` con `elenco`, `info FILE`, `indice FILE`, `pagina FILE 28`, `cerca FILE "testo"` (command `/libro`) |
+| Cercare una lezione per argomento | server MCP `obsidian-search` (tool `search`), oppure `python3 .opencode/scripts/vault-audit.py` per la struttura |
+| Foto di una slide | chiedi all'utente se farla (`pdftoppm*` chiede conferma); se sì: `pdftoppm -png -r 150 -f N -l N "FILE" "images/slide"` e leggi la descrizione con `tesseract "images/slide-NN.png" stdout -l it`; se no: vai oltre |
+| Controllo strutturale | `python3 .opencode/scripts/vault-audit.py [percorso]` |
+| Controllo che non si sia perso nulla | `python3 .opencode/scripts/controlla-perdite.py NOTA [--salva] [--con FONTE]` |
+| Dividere un file unico in lezioni | `python3 .opencode/scripts/dividi-appunti.py FILE` |
+| Scrivere e integrare note | agent `appunti` |
+| Verifica di correttezza e stile | agent `revisore` e command `/revisore`: non modifica nulla, report-only; una passata a lezione conclusa |

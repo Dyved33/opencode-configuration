@@ -1,41 +1,27 @@
 #!/usr/bin/env python3
-"""Structural check of the notes. Modifies nothing.
+"""Controllo strutturale delle note. Non modifica nulla.
 
-Usage:
-  vault-audit.py                 the whole vault
-  vault-audit.py PATH ...        only those files or folders
-  vault-audit.py --short ...     only ERROR and WARN
+Uso:
+  vault-audit.py                 tutto il vault
+  vault-audit.py PERCORSO ...    solo quei file o quelle cartelle
+  vault-audit.py --breve ...     solo ERROR e WARN
 
-ERROR  the note is broken (link, image, LaTeX, unclosed block)
-WARN   it violates the conventions of .opencode/style.md
-INFO   worth keeping an eye on (open todos, long paragraphs)
+ERROR  la nota è rotta (link, immagine, LaTeX, blocco non chiuso)
+WARN   viola le convenzioni di .opencode/stile.md
+INFO   da tenere d'occhio (todo aperti, paragrafi lunghi)
 """
 import os
 import re
 import sys
 
-ALLOWED_CALLOUTS = {"example", "info", "important", "warning", "tip", "todo"}
-IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"}
-# folders that never hold notes
-EXCLUDED_DIRS = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images", "esercizi",
-                 "rollback", ".review"}
-# folders not walked when the whole vault is indexed: the images and the exercises
-# are not notes, but they are still looked up when a link points to them
-SKIPPED_DIRS = {".git", ".obsidian", ".trash", "node_modules", "rollback", ".review"}
-EXCLUDED_PREFIXES = (".opencode-backup",)
-EXCLUDED_FILES = {"AGENTS.md", "Opencode_Guide.md", "chat_prompt.md", "README.md", "LEGGIMI.md",
-                  "CONFIG-CHANGES.md"}
-LONG_PARAGRAPH = 150  # words
+CALLOUT_AMMESSI = {"example", "info", "important", "warning", "tip", "todo"}
+ESTENSIONI_IMG = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"}
+CARTELLE_ESCLUSE = {".git", ".obsidian", ".opencode", ".trash", "node_modules", "images", "esercizi", "rollback"}
+PREFISSI_ESCLUSI = (".opencode-backup",)
+FILE_ESCLUSI = {"AGENTS.md", "Guida_Opencode.md", "Opencode_Guide.md", "prompt_chat.md", "README.md", "LEGGIMI.md", "CONFIG-CHANGES.md"}
+PARAGRAFO_LUNGO = 150  # parole
 
-# the title of the final callout of the note. Change it if your vault calls it differently.
-SUMMARY_TITLES = tuple(t.strip().lower() for t in
-                       os.environ.get("NOTES_SUMMARY_TITLES", "summary,sintesi").split(",") if t.strip())
-
-# the folders that hold the courses, searched for the index and the lessons.
-# By default every first-level folder that is not excluded is a candidate.
-COURSES_DIR = os.environ.get("COURSES_DIR", "")
-
-AI_PHRASES = [
+FRASI_IA = [
     "in questa lezione", "in questa nota", "in questa sezione", "in questa guida",
     "esploreremo", "approfondiremo", "andremo a vedere",
     "è importante notare", "è importante sottolineare", "è fondamentale notare",
@@ -44,146 +30,145 @@ AI_PHRASES = [
     "nel panorama", "gioca un ruolo", "svolge un ruolo", "riveste un ruolo",
     "nota del prof",
 ]
-FORBIDDEN_TITLES = {"conclusioni", "conclusione", "concetti chiave", "riepilogo", "riassunto", "introduzione"}
+TITOLI_VIETATI = {"conclusioni", "conclusione", "concetti chiave", "riepilogo", "riassunto", "introduzione"}
 
 RE_WIKILINK = re.compile(r"(!?)\[\[([^\]\|#\n]*)(#[^\]\|\n]*)?(\|[^\]\n]*)?\]\]")
 RE_IMG_HTML = re.compile(r"<img\b[^>]*?\bsrc\s*=\s*[\"']([^\"']+)[\"']", re.I)
 RE_CALLOUT = re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?(?:>\s*)+\[!([^\]]*)\]")
 RE_HEADING = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
-RE_PLACEHOLDER = re.compile(r"(?<![:/\w])//[^/\n]{1,200}?//(?!/)")
+RE_SEGNAPOSTO = re.compile(r"(?<![:/\w])//[^/\n]{1,200}?//(?!/)")
 RE_TAG = re.compile(r"(?:^|\s)#([A-Za-zÀ-ÿ][\w/\-]*)")
 RE_URL = re.compile(r"https?://\S+")
 
 
-def find_root():
+def trova_radice():
     d = os.getcwd()
     while True:
         if os.path.exists(os.path.join(d, "opencode.json")) or os.path.isdir(os.path.join(d, ".obsidian")):
             return d
-        up = os.path.dirname(d)
-        if up == d:
+        su = os.path.dirname(d)
+        if su == d:
             return os.getcwd()
-        d = up
+        d = su
 
 
-def excluded_dir(name):
-    return name in EXCLUDED_DIRS or name.startswith(EXCLUDED_PREFIXES)
+def cartella_esclusa(nome, escluse):
+    return nome in escluse or nome.startswith(PREFISSI_ESCLUSI)
 
 
-def scan(root):
-    """All the vault files: lowercase basename -> list of paths."""
-    by_name = {}
-    for base, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in SKIPPED_DIRS
-                   and not d.startswith(EXCLUDED_PREFIXES)]
+def scansiona(radice):
+    """Tutti i file del vault: basename minuscolo -> lista di percorsi."""
+    per_nome = {}
+    for base, dirs, files in os.walk(radice):
+        dirs[:] = [d for d in dirs if not cartella_esclusa(d, {".git", ".obsidian", ".trash", "node_modules", "rollback"})]
         for f in files:
-            by_name.setdefault(f.lower(), []).append(os.path.join(base, f))
-    return by_name
+            per_nome.setdefault(f.lower(), []).append(os.path.join(base, f))
+    return per_nome
 
 
-def notes_to_check(paths):
+def note_da_controllare(percorsi):
     out = []
-    for p in paths:
+    for p in percorsi:
         if os.path.isfile(p):
             if p.lower().endswith(".md"):
                 out.append(p)
             continue
         if not os.path.isdir(p):
-            print(f"ERROR {p}: path does not exist")
+            print(f"ERROR {p}: percorso inesistente")
             continue
         for base, dirs, files in os.walk(p):
-            dirs[:] = sorted(d for d in dirs if not excluded_dir(d))
+            dirs[:] = sorted(d for d in dirs if not cartella_esclusa(d, CARTELLE_ESCLUSE))
             for f in sorted(files):
-                if f.lower().endswith(".md") and f not in EXCLUDED_FILES:
+                if f.lower().endswith(".md") and f not in FILE_ESCLUSI:
                     out.append(os.path.join(base, f))
     return out
 
 
-def is_index(path):
+def e_indice(path):
     return os.path.basename(path).startswith("00")
 
 
-def mask(lines):
-    """Returns the lines with code and formulas replaced by spaces, plus the closure problems."""
-    problems = []
-    text_only = []      # without code, with formulas
-    no_formulas = []    # without code and without formulas
+def maschera(righe):
+    """Restituisce le righe con codice e formule sostituiti da spazi, più i problemi di chiusura."""
+    problemi = []
+    solo_testo = []      # senza codice, con formule
+    senza_formule = []   # senza codice e senza formule
     in_fence = False
-    fence_line = 0
-    in_math_block = False
-    math_line = 0
-    for n, line in enumerate(lines, 1):
-        clean = re.sub(r"^\s*(?:>\s*)+", "", line)
-        if re.match(r"^\s*(```|~~~)", clean):
+    riga_fence = 0
+    in_blocco_math = False
+    riga_math = 0
+    for n, riga in enumerate(righe, 1):
+        pulita = re.sub(r"^\s*(?:>\s*)+", "", riga)
+        if re.match(r"^\s*(```|~~~)", pulita):
             if not in_fence:
-                in_fence, fence_line = True, n
+                in_fence, riga_fence = True, n
             else:
                 in_fence = False
-            text_only.append("")
-            no_formulas.append("")
+            solo_testo.append("")
+            senza_formule.append("")
             continue
         if in_fence:
-            text_only.append("")
-            no_formulas.append("")
+            solo_testo.append("")
+            senza_formule.append("")
             continue
-        t = re.sub(r"`[^`\n]*`", lambda m: " " * len(m.group()), line)
-        text_only.append(t)
+        t = re.sub(r"`[^`\n]*`", lambda m: " " * len(m.group()), riga)
+        solo_testo.append(t)
 
         t = t.replace("\\$", "  ")
-        parts = t.split("$$")
-        rebuilt = []
-        for i, part in enumerate(parts):
+        parti = t.split("$$")
+        ricostruita = []
+        for i, parte in enumerate(parti):
             if i > 0:
-                in_math_block = not in_math_block
-                if in_math_block:
-                    math_line = n
-            rebuilt.append(" " * len(part) if in_math_block else part)
-        t = "  ".join(rebuilt)
-        if not in_math_block and t.count("$") % 2 == 1:
-            problems.append(("ERROR", n, "unclosed formula $...$ on the line"))
+                in_blocco_math = not in_blocco_math
+                if in_blocco_math:
+                    riga_math = n
+            ricostruita.append(" " * len(parte) if in_blocco_math else parte)
+        t = "  ".join(ricostruita)
+        if not in_blocco_math and t.count("$") % 2 == 1:
+            problemi.append(("ERROR", n, "formula $...$ non chiusa sulla riga"))
         t = re.sub(r"\$[^$\n]*\$", lambda m: " " * len(m.group()), t)
-        no_formulas.append(t)
+        senza_formule.append(t)
     if in_fence:
-        problems.append(("ERROR", fence_line, "unclosed code block ```"))
-    if in_math_block:
-        problems.append(("ERROR", math_line, "unclosed formula $$...$$"))
-    return text_only, no_formulas, problems
+        problemi.append(("ERROR", riga_fence, "blocco di codice ``` non chiuso"))
+    if in_blocco_math:
+        problemi.append(("ERROR", riga_math, "formula $$...$$ non chiusa"))
+    return solo_testo, senza_formule, problemi
 
 
-def title_case(text):
-    words = [p for p in re.split(r"[\s/]+", re.sub(r"[*_`$():,]", " ", text)) if p]
-    if len(words) < 4:
+def titolo_case(testo):
+    parole = [p for p in re.split(r"[\s/]+", re.sub(r"[*_`$():,]", " ", testo)) if p]
+    if len(parole) < 4:
         return False
-    caps = [p for p in words[1:] if len(p) > 3 and p[0].isupper() and not p.isupper()]
-    return len(caps) >= 3 and len(caps) >= len(words[1:]) / 2
+    maiuscole = [p for p in parole[1:] if len(p) > 3 and p[0].isupper() and not p.isupper()]
+    return len(maiuscole) >= 3 and len(maiuscole) >= len(parole[1:]) / 2
 
 
-def resolve_note(target, by_name, folder, root):
+def risolvi_nota(target, per_nome, cartella, radice):
     target = target.strip()
     if not target:
         return True
-    name = os.path.basename(target)
-    if not os.path.splitext(name)[1]:
-        name += ".md"
-    candidates = by_name.get(name.lower(), [])
+    nome = os.path.basename(target)
+    if not os.path.splitext(nome)[1]:
+        nome += ".md"
+    candidati = per_nome.get(nome.lower(), [])
     if "/" in target:
         suff = (target if target.lower().endswith(".md") else target + ".md").lower()
-        candidates = [c for c in candidates if c.lower().replace(os.sep, "/").endswith(suff)]
-    return candidates[0] if candidates else None
+        candidati = [c for c in candidati if c.lower().replace(os.sep, "/").endswith(suff)]
+    return candidati[0] if candidati else None
 
 
-def resolve_file(src, by_name, folder, root):
+def risolvi_file(src, per_nome, cartella, radice):
     src = src.strip()
     if re.match(r"^(https?:|data:|app:|file:)", src):
         return True
     src = re.sub(r"%20", " ", src)
-    for base in (folder, root, os.path.join(folder, "images")):
+    for base in (cartella, radice, os.path.join(cartella, "images")):
         if os.path.isfile(os.path.join(base, src)):
             return True
-    return bool(by_name.get(os.path.basename(src).lower()))
+    return bool(per_nome.get(os.path.basename(src).lower()))
 
 
-def headings(path, cache={}):
+def intestazioni(path, cache={}):
     if path not in cache:
         try:
             with open(path, encoding="utf-8") as f:
@@ -196,156 +181,156 @@ def headings(path, cache={}):
     return cache[path]
 
 
-def check(path, by_name, root):
+def controlla(path, per_nome, radice):
     out = []
     try:
         with open(path, encoding="utf-8") as f:
-            lines = f.read().split("\n")
+            righe = f.read().split("\n")
     except (OSError, UnicodeDecodeError) as e:
-        return [("ERROR", 0, f"unreadable file: {e}")], 0
-    folder = os.path.dirname(path)
-    index = is_index(path)
-    text_only, no_formulas, problems = mask(lines)
-    out += problems
+        return [("ERROR", 0, f"file illeggibile: {e}")], 0
+    cartella = os.path.dirname(path)
+    indice = e_indice(path)
+    solo_testo, senza_formule, problemi = maschera(righe)
+    out += problemi
 
-    if lines and lines[0].strip() == "---":
-        out.append(("WARN", 1, "frontmatter present (notes don't use it)"))
+    if righe and righe[0].strip() == "---":
+        out.append(("WARN", 1, "frontmatter presente (le note non lo usano)"))
 
-    # headings
+    # titoli
     h1 = []
-    for n, line in enumerate(text_only, 1):
-        m = RE_HEADING.match(line)
+    for n, riga in enumerate(solo_testo, 1):
+        m = RE_HEADING.match(riga)
         if not m:
             continue
-        level, text = len(m.group(1)), m.group(2)
-        if level == 1:
-            h1.append((n, text))
-        if level > 3:
-            out.append(("WARN", n, f"heading level {level}: stop at ###"))
-        bare = re.sub(r"[*_`]", "", text).strip()
-        if "**" in text:
-            out.append(("WARN", n, "bold heading"))
-        if re.match(r"^([IVX]+\.|\d+[.)])\s", bare):
-            out.append(("WARN", n, "numbered heading"))
-        if re.search(r"[\U0001F300-\U0001FAFF☀-➿]", bare):
-            out.append(("WARN", n, "emoji in the heading"))
-        if bare.rstrip(":").lower() in FORBIDDEN_TITLES:
-            out.append(("WARN", n, f'section "{bare}" is AI-style'))
-        if level > 1 and title_case(bare):
-            out.append(("WARN", n, "Title Case heading"))
+        livello, testo = len(m.group(1)), m.group(2)
+        if livello == 1:
+            h1.append((n, testo))
+        if livello > 3:
+            out.append(("WARN", n, f"titolo di livello {livello}: fermati a ###"))
+        nudo = re.sub(r"[*_`]", "", testo).strip()
+        if "**" in testo:
+            out.append(("WARN", n, "titolo in grassetto"))
+        if re.match(r"^([IVX]+\.|\d+[.)])\s", nudo):
+            out.append(("WARN", n, "titolo numerato"))
+        if re.search(r"[\U0001F300-\U0001FAFF☀-➿]", nudo):
+            out.append(("WARN", n, "emoji nel titolo"))
+        if nudo.rstrip(":").lower() in TITOLI_VIETATI:
+            out.append(("WARN", n, f'sezione "{nudo}" da stile IA'))
+        if livello > 1 and titolo_case(nudo):
+            out.append(("WARN", n, "titolo con Maiuscole Su Ogni Parola"))
     if not h1:
-        out.append(("WARN", 1, "missing # heading at the top"))
+        out.append(("WARN", 1, "manca il titolo # in testa"))
     elif len(h1) > 1:
-        out.append(("WARN", h1[1][0], "more than one # heading: only one allowed"))
+        out.append(("WARN", h1[1][0], "più di un titolo #: ne serve uno solo"))
 
-    # line by line
-    open_divs = 0
-    for n, (line, nofx) in enumerate(zip(text_only, no_formulas), 1):
-        m = RE_CALLOUT.match(line)
+    # riga per riga
+    div_aperti = 0
+    for n, (riga, nofx) in enumerate(zip(solo_testo, senza_formule), 1):
+        m = RE_CALLOUT.match(riga)
         if m:
-            ctype = m.group(1).rstrip("+-").strip()
-            if ctype.lower() not in ALLOWED_CALLOUTS:
-                out.append(("WARN", n, f"callout [!{ctype}] not allowed (allowed: {', '.join(sorted(ALLOWED_CALLOUTS))})"))
-            elif ctype != ctype.lower():
-                out.append(("WARN", n, f"callout [!{ctype}] must be lowercase"))
-            if ctype.lower() == "todo":
-                text = line.split("]", 1)[1].strip() or "(no text)"
-                out.append(("INFO", n, f"open todo: {text[:90]}"))
+            tipo = m.group(1).rstrip("+-").strip()
+            if tipo.lower() not in CALLOUT_AMMESSI:
+                out.append(("WARN", n, f"callout [!{tipo}] non previsto (ammessi: {', '.join(sorted(CALLOUT_AMMESSI))})"))
+            elif tipo != tipo.lower():
+                out.append(("WARN", n, f"callout [!{tipo}] va in minuscolo"))
+            if tipo.lower() == "todo":
+                testo = riga.split("]", 1)[1].strip() or "(senza testo)"
+                out.append(("INFO", n, f"todo aperto: {testo[:90]}"))
         elif re.search(r"\[![A-Za-z]+\]", nofx):
-            out.append(("ERROR", n, "malformed callout: [!type] must come right after >"))
+            out.append(("ERROR", n, "callout malformato: [!tipo] deve stare subito dopo >"))
 
-        for emb, target, anchor, _alias in RE_WIKILINK.findall(nofx):
-            ext = os.path.splitext(target.strip())[1].lower()
-            if emb and ext in IMAGE_EXTS:
-                if not resolve_file(target, by_name, folder, root):
-                    out.append(("ERROR", n, f"missing image: {target.strip()}"))
-            elif ext and ext != ".md":
-                if not resolve_file(target, by_name, folder, root):
-                    out.append(("ERROR", n, f"missing linked file: {target.strip()}"))
+        for emb, target, ancora, _alias in RE_WIKILINK.findall(nofx):
+            est = os.path.splitext(target.strip())[1].lower()
+            if emb and est in ESTENSIONI_IMG:
+                if not risolvi_file(target, per_nome, cartella, radice):
+                    out.append(("ERROR", n, f"immagine mancante: {target.strip()}"))
+            elif est and est != ".md":
+                if not risolvi_file(target, per_nome, cartella, radice):
+                    out.append(("ERROR", n, f"file collegato mancante: {target.strip()}"))
             else:
-                dest = resolve_note(target, by_name, folder, root)
+                dest = risolvi_nota(target, per_nome, cartella, radice)
                 if dest is None:
-                    out.append(("ERROR", n, f"broken link: [[{target.strip()}]]"))
-                elif anchor and not anchor.startswith("#^"):
+                    out.append(("ERROR", n, f"link rotto: [[{target.strip()}]]"))
+                elif ancora and not ancora.startswith("#^"):
                     file_dest = path if dest is True else dest
-                    if anchor[1:].strip().lower() not in headings(file_dest):
-                        out.append(("WARN", n, f"nonexistent section in the link: [[{target.strip()}{anchor}]]"))
+                    if ancora[1:].strip().lower() not in intestazioni(file_dest):
+                        out.append(("WARN", n, f"sezione inesistente nel link: [[{target.strip()}{ancora}]]"))
 
-        for src in RE_IMG_HTML.findall(line):
-            if not resolve_file(src, by_name, folder, root):
-                out.append(("ERROR", n, f"missing image: {src}"))
-        open_divs += len(re.findall(r"<div\b", line, re.I)) - len(re.findall(r"</div>", line, re.I))
+        for src in RE_IMG_HTML.findall(riga):
+            if not risolvi_file(src, per_nome, cartella, radice):
+                out.append(("ERROR", n, f"immagine mancante: {src}"))
+        div_aperti += len(re.findall(r"<div\b", riga, re.I)) - len(re.findall(r"</div>", riga, re.I))
 
-        no_url = RE_URL.sub("", nofx)
-        for m in RE_PLACEHOLDER.finditer(no_url):
-            out.append(("WARN", n, f"unresolved placeholder: {m.group().strip()[:70]}"))
+        senza_url = RE_URL.sub("", nofx)
+        for m in RE_SEGNAPOSTO.finditer(senza_url):
+            out.append(("WARN", n, f"segnaposto non risolto: {m.group().strip()[:70]}"))
 
-        no_link = re.sub(r"<[^>]+>", " ", RE_WIKILINK.sub(" ", no_url))
-        if not RE_HEADING.match(line):
-            m = RE_TAG.search(no_link)
+        senza_link = re.sub(r"<[^>]+>", " ", RE_WIKILINK.sub(" ", senza_url))
+        if not RE_HEADING.match(riga):
+            m = RE_TAG.search(senza_link)
             if m:
-                out.append(("WARN", n, f"tag #{m.group(1)} (notes don't use tags)"))
+                out.append(("WARN", n, f"tag #{m.group(1)} (le note non usano tag)"))
 
-        low = nofx.lower()
-        for phrase in AI_PHRASES:
-            if phrase in low:
-                out.append(("WARN", n, f'AI-style phrase: "{phrase}"'))
+        basso = nofx.lower()
+        for frase in FRASI_IA:
+            if frase in basso:
+                out.append(("WARN", n, f'formula da stile IA: "{frase}"'))
         if "—" in nofx:
-            out.append(("INFO", n, "em dash —"))
-        m = re.match(r"^\s*\*\*([^*]+)\*\*:?\s*$", line)
-        if m and title_case(m.group(1)):
-            out.append(("WARN", n, "Title Case label"))
+            out.append(("INFO", n, "trattino lungo —"))
+        m = re.match(r"^\s*\*\*([^*]+)\*\*:?\s*$", riga)
+        if m and titolo_case(m.group(1)):
+            out.append(("WARN", n, "etichetta con Maiuscole Su Ogni Parola"))
 
-        word_count = len(nofx.split())
-        if word_count > LONG_PARAGRAPH and not line.lstrip().startswith("|"):
-            out.append(("INFO", n, f"paragraph of {word_count} words: split or trim it"))
+        parole = len(nofx.split())
+        if parole > PARAGRAFO_LUNGO and not riga.lstrip().startswith("|"):
+            out.append(("INFO", n, f"paragrafo di {parole} parole: spezzalo o asciugalo"))
 
-    if open_divs != 0:
-        out.append(("ERROR", len(lines), f"<div> and </div> unbalanced (difference {open_divs})"))
+    if div_aperti != 0:
+        out.append(("ERROR", len(righe), f"<div> e </div> non bilanciati (differenza {div_aperti})"))
 
-    total_words = sum(len(r.split()) for r in text_only)
-    if not index and total_words > 50:
-        # the note must end with the [!info] Summary callout
-        last = None
-        for n, line in enumerate(text_only, 1):
-            if RE_CALLOUT.match(line):
-                last = n
-        closes = False
-        if last:
-            head = text_only[last - 1]
-            ctype = RE_CALLOUT.match(head).group(1).strip().lower()
-            title = re.sub(r"[*_]", "", head.split("]", 1)[1]).strip().lower()
-            rest = [r for r in text_only[last:] if r.strip() and not r.lstrip().startswith(">")]
-            closes = ctype == "info" and title.startswith(SUMMARY_TITLES) and not rest
-        if not closes:
-            out.append(("WARN", 0, "the note doesn't end with the [!info] Summary: callout"))
-    return out, total_words
+    parole_tot = sum(len(r.split()) for r in solo_testo)
+    if not indice and parole_tot > 50:
+        # la nota deve chiudersi con il callout [!info] Sintesi
+        ultimo = None
+        for n, riga in enumerate(solo_testo, 1):
+            if RE_CALLOUT.match(riga):
+                ultimo = n
+        chiude = False
+        if ultimo:
+            testa = solo_testo[ultimo - 1]
+            tipo = RE_CALLOUT.match(testa).group(1).strip().lower()
+            titolo = re.sub(r"[*_]", "", testa.split("]", 1)[1]).strip().lower()
+            resto = [r for r in solo_testo[ultimo:] if r.strip() and not r.lstrip().startswith(">")]
+            chiude = tipo == "info" and titolo.startswith("sintesi") and not resto
+        if not chiude:
+            out.append(("WARN", 0, "la nota non si chiude con il callout [!info] Sintesi:"))
+    return out, parole_tot
 
 
-def check_indexes(notes, root):
+def controlla_indici(note, radice):
     out = []
-    per_folder = {}
-    for p in notes:
-        per_folder.setdefault(os.path.dirname(p) or ".", []).append(os.path.join(os.path.dirname(p) or ".", os.path.basename(p)))
-    for folder, files in sorted(per_folder.items()):
-        all_md = [os.path.join(folder, f) for f in sorted(os.listdir(folder))
-                  if f.lower().endswith(".md") and f not in EXCLUDED_FILES]
-        indexes = [f for f in all_md if is_index(f)]
-        lessons = [f for f in all_md if not is_index(f)]
-        if not indexes:
-            if len(lessons) >= 2:
-                out.append((folder, "INFO", 0, f"{len(lessons)} notes and no index (file starting with 00)"))
+    per_cartella = {}
+    for p in note:
+        per_cartella.setdefault(os.path.dirname(p) or ".", []).append(os.path.join(os.path.dirname(p) or ".", os.path.basename(p)))
+    for cartella, files in sorted(per_cartella.items()):
+        tutte = [os.path.join(cartella, f) for f in sorted(os.listdir(cartella))
+                 if f.lower().endswith(".md") and f not in FILE_ESCLUSI]
+        indici = [f for f in tutte if e_indice(f)]
+        lezioni = [f for f in tutte if not e_indice(f)]
+        if not indici:
+            if len(lezioni) >= 2:
+                out.append((cartella, "INFO", 0, f"{len(lezioni)} note e nessun indice (file che inizia con 00)"))
             continue
         try:
-            with open(indexes[0], encoding="utf-8") as f:
-                linked = {os.path.basename(t.strip()).lower().removesuffix(".md")
-                          for _e, t, _a, _al in RE_WIKILINK.findall(f.read())}
+            with open(indici[0], encoding="utf-8") as f:
+                collegati = {os.path.basename(t.strip()).lower().removesuffix(".md")
+                             for _e, t, _a, _al in RE_WIKILINK.findall(f.read())}
         except OSError:
             continue
-        for lesson in lessons:
-            name = os.path.basename(lesson)[:-3]
-            if name.lower() not in linked:
-                out.append((indexes[0], "WARN", 0, f"lesson not listed in the index: {name}"))
+        for lez in lezioni:
+            nome = os.path.basename(lez)[:-3]
+            if nome.lower() not in collegati:
+                out.append((indici[0], "WARN", 0, f"lezione non elencata nell'indice: {nome}"))
     return out
 
 
@@ -354,49 +339,49 @@ def main():
     if "-h" in args or "--help" in args:
         print(__doc__.strip())
         return
-    short = "--short" in args
-    paths = [a for a in args if not a.startswith("--")] or ["."]
-    root = find_root()
-    by_name = scan(root)
-    notes = notes_to_check(paths)
-    if not notes:
-        print("No .md note to check in the given paths.")
+    breve = "--breve" in args
+    percorsi = [a for a in args if not a.startswith("--")] or ["."]
+    radice = trova_radice()
+    per_nome = scansiona(radice)
+    note = note_da_controllare(percorsi)
+    if not note:
+        print("Nessuna nota .md da controllare nei percorsi indicati.")
         return
 
-    counts = {"ERROR": 0, "WARN": 0, "INFO": 0}
-    results = []
-    for p in notes:
-        problems, words = check(p, by_name, root)
-        results.append((p, problems, words))
+    conteggio = {"ERROR": 0, "WARN": 0, "INFO": 0}
+    risultati = []
+    for p in note:
+        problemi, parole = controlla(p, per_nome, radice)
+        risultati.append((p, problemi, parole))
     extra = {}
-    for file, severity, n, msg in check_indexes(notes, root):
-        extra.setdefault(file, []).append((severity, n, msg))
-    for file, items in extra.items():
-        for i, (p, problems, words) in enumerate(results):
+    for file, grav, n, msg in controlla_indici(note, radice):
+        extra.setdefault(file, []).append((grav, n, msg))
+    for file, voci in extra.items():
+        for i, (p, problemi, parole) in enumerate(risultati):
             if os.path.abspath(p) == os.path.abspath(file):
-                results[i] = (p, problems + items, words)
+                risultati[i] = (p, problemi + voci, parole)
                 break
         else:
-            results.append((file, items, 0))
+            risultati.append((file, voci, 0))
 
-    order = {"ERROR": 0, "WARN": 1, "INFO": 2}
-    if short:
-        results = [(p, [x for x in pr if x[0] != "INFO"], w) for p, pr, w in results]
-    for p, problems, words in results:
-        for g, _n, _m in problems:
-            counts[g] += 1
-        if not problems:
+    ordine = {"ERROR": 0, "WARN": 1, "INFO": 2}
+    if breve:
+        risultati = [(p, [x for x in pr if x[0] != "INFO"], w) for p, pr, w in risultati]
+    for p, problemi, parole in risultati:
+        for g, _n, _m in problemi:
+            conteggio[g] += 1
+        if not problemi:
             continue
         rel = os.path.relpath(p)
-        print(f"\n{rel}" + (f"  ({words} words)" if words else ""))
-        for severity, n, msg in sorted(problems, key=lambda x: (order[x[0]], x[1])):
-            where = f"line {n}" if n else "-"
-            print(f"  {severity:<5} {where:<9} {msg}")
+        print(f"\n{rel}" + (f"  ({parole} parole)" if parole else ""))
+        for grav, n, msg in sorted(problemi, key=lambda x: (ordine[x[0]], x[1])):
+            dove = f"riga {n}" if n else "-"
+            print(f"  {grav:<5} {dove:<9} {msg}")
 
-    checked = {os.path.abspath(n) for n in notes}
-    clean = len(notes) - sum(1 for p, pr, _w in results if pr and os.path.abspath(p) in checked)
-    print(f"\n{len(notes)} notes checked, {clean} without findings: "
-          f"{counts['ERROR']} ERROR, {counts['WARN']} WARN, {counts['INFO']} INFO")
+    controllate = {os.path.abspath(n) for n in note}
+    puliti = len(note) - sum(1 for p, pr, _w in risultati if pr and os.path.abspath(p) in controllate)
+    print(f"\n{len(note)} note controllate, {puliti} senza segnalazioni: "
+          f"{conteggio['ERROR']} ERROR, {conteggio['WARN']} WARN, {conteggio['INFO']} INFO")
 
 
 if __name__ == "__main__":

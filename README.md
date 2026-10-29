@@ -28,13 +28,13 @@ python3 --version                                             # python 3 for scr
 
 opencode plugin add @tarquinen/opencode-dcp@latest           # reduces token usage using old outputs 
 opencode plugin add @plannotator/opencode@latest             # reviews the plan
-opencode plugin add @azumag/opencode-rate-limit-fallback@2.1.0 # finite fallback on recognized errors
+opencode plugin add @azumag/opencode-rate-limit-fallback@2.1.1 # finite fallback on recognized errors
 ```
 
 Notes configuration only:
 
 ```bash
-opencode plugin add opencode-parser                           # the parser that reads photos of documents
+opencode plugin add opencode-parser # the parser that reads photos of documents
 sudo apt install tesseract-ocr tesseract-ocr-ita poppler-utils # photo reader & pdftoppm / pdftotext for PDFs
 python3 -m pip install --user --break-system-packages pypdf "obsidian-mcp-search[server]" docling
 ```
@@ -142,19 +142,20 @@ If a configuration is broken and OpenCode refuses to start:
 |---|---|---|
 | `notes/AGENTS.md` | `AGENTS.md` | structure, 11 rules, tools table (read every session) |
 | `notes/opencode.json` | `opencode.json` | permissions (v2 ruleset), free models, rate limit fallback, obsidian-search MCP server, experimental todowrite |
-| `notes/.opencode/style.md` | `.opencode/style.md` | single source for the note style, loaded at every session |
-| `notes/.opencode/rules.md` | `.opencode/rules.md` | the writing discipline, loaded at every session: no filler text, one idea per block |
+| `notes/.opencode/stile.md` | `.opencode/stile.md` | single source for the note style, loaded at every session |
+| `notes/.opencode/regole.md` | `.opencode/regole.md` | the writing discipline, loaded at every session: no filler text, one idea per block |
 | `notes/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
 | `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | ordered fallback chain; stops when exhausted |
-| `notes/.opencode/agents/plan.md` | `.opencode/agents/` | plans only, submits via Plannotator, cannot edit |
+| `notes/.opencode/skills/` | `.opencode/skills/` | native skills: `no-ai-slop`, `i-have-adhd`, `note-quality` (loaded on demand) |
+| `notes/.opencode/agents/appunti.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
+| `notes/.opencode/agents/revisore.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
+| `notes/.opencode/agents/audit.md` | `.opencode/agents/` | read-only audit: runs vault-audit.py and controlla-perdite.py |
 | `notes/.opencode/plugins/free-model-router/` | `.opencode/plugins/` | chooses the highest-ranked active free model without a probe request |
 | `notes/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
-| `notes/.opencode/agents/notes.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
-| `notes/.opencode/agents/reviewer.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
-| `notes/.opencode/commands/` | `.opencode/commands/` | `/lesson`, `/review`, `/audit`, `/slide`, `/split`, `/book` |
+| `notes/.opencode/commands/` | `.opencode/commands/` | `/lezione`, `/rivedi`, `/revisore`, `/revisione`, `/slide`, `/dividi`, `/libro` |
 | `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader (with Docling OCR fallback), structural audit, loss check, splitter, book reader |
 | `notes/prompt/` | `prompt/` | the guide for the user, the prompts for the external chats, the summary of the configuration |
-| `notes/books/` | `books/` | textbooks, one PDF per course (empty: you fill it) |
+| `notes/libri/` | `libri/` | textbooks, one PDF per course (empty: you fill it) |
 | `notes/.gitignore` | `.gitignore` | lines merged into yours, never replacing them |
 
 The `rules.md` file is the reason anybody gets the same behaviour on a new machine: the
@@ -211,7 +212,7 @@ to do. If it was read wrong, `style.md` is the file to change.
 
 **Nothing the teacher said is ever lost.** That is rule 2 of `AGENTS.md` and the
 opening of `style.md`: the agent fixes the shape, corrects and adds; it only
-removes words. On top of the rule there is `check-losses.py`: the agent saves a
+removes words. On top of the rule there is `controlla-perdite.py`: the agent saves a
 copy before editing and at the end the script lists formulas, code, images,
 numbers, lines and slide pages it can no longer find. It is a word-by-word
 comparison, so it lowers the risk without eliminating it: on important notes it is
@@ -223,12 +224,12 @@ and who checks. The reviewer works in a clean context, so it is not influenced b
 what the other one just wrote.
 
 **The reviewer runs once, when the lesson is finished.** It is started by
-`/lesson` and by `/review`. After any edit the agent only updates the index and
+`/lezione` and by `/rivedi`. After any edit the agent only updates the index and
 runs the structural check.
 
-**`style.md` is always loaded** (the `instructions` field of `opencode.json`): a
+**`stile.md` is always loaded** (the `instructions` field of `opencode.json`): a
 weak model sometimes skips reading, and the style is exactly the part that must
-not be skipped. `rules.md` is loaded the same way.
+not be skipped. `regole.md` is loaded the same way.
 
 **Fewer tokens, less noise.** The free models of OpenCode answer titles and
 compaction at zero API token cost: they are set on the two built-in agents,
@@ -263,7 +264,7 @@ machine that has it, the `permissions` array, the `plugins` key and the agent
 frontmatter are not read, and the payload silently does nothing. `doctor.sh` checks
 the version first.
 
-**Image-only PDFs are read with OCR.** `read-slides.py` uses `pdftotext` first; if
+**Image-only PDFs are read with OCR.** `leggi-slide.py` uses `pdftotext` first; if
 more than half of the pages come out empty it retries with Docling automatically. It
 only kicks in for files up to 60 pages (override with `READ_SLIDES_DOCLING_LIMIT`;
 force with `READ_SLIDES_DOCLING_FORCE=1`), so a 2000-page book is never converted page
@@ -360,26 +361,26 @@ stray folder in the cwd. Use the MCP server instead.
 | 2 | index and modules | `00 Index - <Course>.md` in every course or module folder |
 | 4 | one `.txt` per lesson | the agent looks for the `.txt` with the same name or the same date as the note, otherwise it asks |
 | 5 | git from the terminal | the guide uses `git diff` and `git restore` |
-| 6 | splitting single files | script `split-notes.py` and command `/split` |
+| 6 | splitting single files | script `dividi-appunti.py` and command `/dividi` |
 | 7 | `// fit //` | the placeholder that replaces `// 400 //`: full-width image |
 | 7b | layout of an image without a placeholder | the agent asks a single `question` listing all the images in order (resize / fit / caption below / text at the side / leave it as it is), text from the OCR if available |
 | 9 | images inside callouts | stay as `![[x.png\|300]]` |
 | 10 | `→` in formulas | no conversion, no check |
 | 11 | only `// ... //` | `%% ... %%` removed everywhere |
 | 12 | em dash, web sources | INFO only in the audit; no source is cited |
-| 13 | summary at the end of the lesson | every note ends with `> [!info] Summary:` (3-6 points); the audit reports it if missing |
-| 14 | length | no line limit: `style.md` asks for density. The audit reports single paragraphs over 150 words, as INFO |
+| 13 | summary at the end of the lesson | every note ends with `> [!info] Sintesi:` (3-6 points); the audit reports it if missing |
+| 14 | length | no line limit: `stile.md` asks for density. The audit reports single paragraphs over 150 words, as INFO |
 | 15 | configuration and file creation | the agent does not change the configuration and does not create notes |
-| 16 | reviewer | one pass, only with `/lesson` and `/review` |
+| 16 | reviewer | one pass, only with `/lezione` and `/rivedi` |
 
 ## Converting old notes to the new format (from a single file to multiple files)
 
-`/split "path/Notes course.md"` shows the plan and only writes after
+`/dividi "path/Notes course.md"` shows the plan and only writes after
 confirmation. The script cuts on the `###` headings, derives the date of each
 section from the name of its first image and joins consecutive sections that
 share the same date. The dates come from the screenshots, so they are
 approximate: they are used to group the sections, never to name the files.
-Then `/review` one note at a time: it trims, adds the summary and reports the
+Then `/rivedi` one note at a time: it trims, adds the summary and reports the
 word count before and after. Make a commit before you start.
 
 Note that with a multi-agent system it is convenient to have smaller files (it
