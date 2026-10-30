@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Gestione dei libri di testo in libri/.
+"""Textbook management in books/.
 
-Un libro sta in libri/<Nome corso>.pdf. Uso:
-  libri.py elenco                     libri presenti e corso associato
-  libri.py info FILE                  titolo, pagine, corso del libro
-  libri.py indice FILE                sommario del PDF (dai segnalibri)
-  libri.py pagina FILE 28             testo della pagina 28 (oppure 19-21)
-  libri.py cerca FILE "testo"         pagine in cui compare il testo
+A book is in books/<Course name>.pdf. Usage:
+  books.py list                     present books and associated course
+  books.py info FILE                title, pages, course of the book
+  books.py index FILE               PDF summary (from bookmarks)
+  books.py page FILE 28             text of page 28 (or 19-21)
+  books.py search FILE "text"       pages where the text appears
 
-Le pagine si leggono con lo stesso motore di leggi-slide.py (pdftotext, con
-fallback Docling sulle pagine immagine). Non scrive nulla nel vault.
+Pages are read with the same engine as read-slides.py (pdftotext, with
+Docling fallback on image pages). Writes nothing in the vault.
 """
 import importlib.util
 import os
@@ -18,19 +18,19 @@ import sys
 QUI = os.path.dirname(os.path.abspath(__file__))
 RADICE = os.path.dirname(os.path.dirname(QUI))
 LIBRI = os.path.join(RADICE, "libri")
-CORSI = os.path.join(RADICE, "primo semestre")
+CORSI = os.path.join(RADICE, "first semester")
 
 
-def _carica_leggi_slide():
-    percorso = os.path.join(QUI, "leggi-slide.py")
-    spec = importlib.util.spec_from_file_location("leggi_slide", percorso)
+def _carica_read_slides():
+    percorso = os.path.join(QUI, "read-slides.py")
+    spec = importlib.util.spec_from_file_location("read_slides", percorso)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
     return modulo
 
 
-def esci(msg):
-    print(f"ERRORE: {msg}")
+def exit_with(msg):
+    print(f"ERROR: {msg}")
     sys.exit(1)
 
 
@@ -65,32 +65,32 @@ def risolvi(argomento):
     if os.sep in argomento or os.path.isfile(argomento):
         percorso = argomento
         if not os.path.isfile(percorso):
-            esci(f"file non trovato: {argomento}")
+            exit_with(f"file not found: {argomento}")
         return percorso
     candidato = os.path.join(LIBRI, argomento)
     if os.path.isfile(candidato):
         return candidato
     if not candidato.lower().endswith(".pdf") and os.path.isfile(candidato + ".pdf"):
         return candidato + ".pdf"
-    esci(f"libro non trovato: {argomento} (cerca in libri/)")
+    exit_with(f"book not found: {argomento} (look in books/)")
 
 
 def comando_elenco():
     libri = libri_presenti()
     if not libri:
-        print(f"nessun libro in {os.path.relpath(LIBRI, RADICE)}/")
+        print(f"no books in {os.path.relpath(LIBRI, RADICE)}/")
         return
-    print(f"Libri in {os.path.relpath(LIBRI, RADICE)}/:")
+    print(f"Books in {os.path.relpath(LIBRI, RADICE)}/:")
     for nome in libri:
         corso = corso_del_libro(nome)
-        stato = f"corso: {corso}" if corso else "NESSUN CORSO CORRISPONDENTE"
+        stato = f"course: {corso}" if corso else "NO MATCHING COURSE"
         print(f"  {nome}  ->  {stato}")
     orfani = [
         c for c in corsi_presenti()
         if normalizza(c) not in {normalizza(os.path.splitext(n)[0]) for n in libri}
     ]
     if orfani:
-        print("Corsi senza libro:")
+        print("Courses without book:")
         for c in orfani:
             print(f"  {c}")
 
@@ -99,13 +99,13 @@ def comando_info(percorso):
     from pypdf import PdfReader
     r = PdfReader(percorso)
     nome = os.path.basename(percorso)
-    corso = corso_del_libro(nome) or "nessuno"
-    titolo = (r.metadata.title if r.metadata else None) or "(senza titolo)"
+    corso = corso_del_libro(nome) or "none"
+    titolo = (r.metadata.title if r.metadata else None) or "(no title)"
     print(f"File:    {nome}")
-    print(f"Titolo:  {titolo}")
-    print(f"Pagine:  {len(r.pages)}")
-    print(f"Corso:   {corso}")
-    print(f"Segnalibri: {_conta_segnalibri(r.outline) if r.outline else 0}")
+    print(f"Title:   {titolo}")
+    print(f"Pages:   {len(r.pages)}")
+    print(f"Course:  {corso}")
+    print(f"Bookmarks: {_conta_segnalibri(r.outline) if r.outline else 0}")
 
 
 def _conta_segnalibri(items):
@@ -122,9 +122,9 @@ def comando_indice(percorso):
     from pypdf import PdfReader
     r = PdfReader(percorso)
     if not r.outline:
-        print("Questo PDF non ha un sommario (segnalibri). Usa 'pagina FILE N' o 'cerca FILE \"testo\"'.")
+        print("This PDF has no summary (bookmarks). Use 'page FILE N' or 'search FILE \"text\"'.")
         return
-    print(f"Sommario di {os.path.basename(percorso)}:")
+    print(f"Summary of {os.path.basename(percorso)}:")
 
     def cammina(items, livello):
         for it in items:
@@ -143,24 +143,24 @@ def comando_indice(percorso):
 
 def comando_pagina(percorso, argomento):
     import re
-    leggi = _carica_leggi_slide()
+    leggi = _carica_read_slides()
     pagine = leggi.carica(percorso)
     tot = len(pagine)
     m = re.fullmatch(r"(\d+)(?:-(\d+))?", argomento)
     if not m:
-        esci(f"pagina non valida: {argomento} (usa 28 oppure 19-21)")
+        exit_with(f"invalid page: {argomento} (use 28 or 19-21)")
     a = int(m.group(1))
     b = int(m.group(2) or a)
     if a < 1 or b > tot or a > b:
-        esci(f"intervallo fuori dal libro: il libro ha {tot} pagine")
+        exit_with(f"range out of book: book has {tot} pages")
     leggi.stampa(pagine, a, b)
     vuote = sum(1 for p in pagine if not p.strip())
     if vuote > tot / 2:
-        print(f"ATTENZIONE: {vuote} pagine su {tot} sono senza testo. Se il file e' di immagini, il fallback Docling lo legge a mano.")
+        print(f"WARNING: {vuote} pages out of {tot} have no text. If the file is image-based, Docling fallback reads it manually.")
 
 
 def comando_cerca(percorso, ago):
-    leggi = _carica_leggi_slide()
+    leggi = _carica_read_slides()
     pagine = leggi.carica(percorso)
     ago_norm = leggi.normalizza(ago)
     trovate = 0
@@ -170,10 +170,10 @@ def comando_cerca(percorso, ago):
                 print(f"p. {i}: {' '.join(riga.split())[:140]}")
                 trovate += 1
                 if trovate >= 40:
-                    print("... (altri risultati omessi: restringi la ricerca)")
+                    print("... (other results omitted: narrow search)")
                     return
     if not trovate:
-        print(f'"{ago}" non compare in nessuna pagina')
+        print(f'"{ago}" does not appear on any page')
 
 
 def main():
@@ -182,26 +182,26 @@ def main():
         print(__doc__.strip())
         return
     comando = args[0]
-    if comando == "elenco":
+    if comando == "list":
         comando_elenco()
     elif comando == "info":
         if len(args) < 2:
-            esci("manca il libro: info FILE")
+            exit_with("missing book: info FILE")
         comando_info(risolvi(args[1]))
-    elif comando == "indice":
+    elif comando == "index":
         if len(args) < 2:
-            esci("manca il libro: indice FILE")
+            exit_with("missing book: index FILE")
         comando_indice(risolvi(args[1]))
-    elif comando == "pagina":
+    elif comando == "page":
         if len(args) < 3:
-            esci('manca una pagina: pagina FILE 28')
+            exit_with('missing page: page FILE 28')
         comando_pagina(risolvi(args[1]), args[2])
-    elif comando == "cerca":
+    elif comando == "search":
         if len(args) < 3:
-            esci('manca il testo da cercare: cerca FILE "testo"')
+            exit_with('missing search text: search FILE "text"')
         comando_cerca(risolvi(args[1]), " ".join(args[2:]))
     else:
-        esci(f"comando sconosciuto: {comando} (elenco, info, indice, pagina, cerca)")
+        exit_with(f"unknown command: {comando} (list, info, index, page, search)")
 
 
 if __name__ == "__main__":

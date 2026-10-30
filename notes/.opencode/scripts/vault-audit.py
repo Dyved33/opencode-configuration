@@ -7,7 +7,7 @@ Uso:
   vault-audit.py --breve ...     solo ERROR e WARN
 
 ERROR  la nota è rotta (link, immagine, LaTeX, blocco non chiuso)
-WARN   viola le convenzioni di .opencode/stile.md
+WARN   violates the conventions of .opencode/style.md
 INFO   da tenere d'occhio (todo aperti, paragrafi lunghi)
 """
 import os
@@ -215,7 +215,7 @@ def controlla(path, per_nome, radice):
         if re.search(r"[\U0001F300-\U0001FAFF☀-➿]", nudo):
             out.append(("WARN", n, "emoji nel titolo"))
         if nudo.rstrip(":").lower() in TITOLI_VIETATI:
-            out.append(("WARN", n, f'sezione "{nudo}" da stile IA'))
+            out.append(("WARN", n, f'sezione "{nudo}" AI style'))
         if livello > 1 and titolo_case(nudo):
             out.append(("WARN", n, "titolo con Maiuscole Su Ogni Parola"))
     if not h1:
@@ -274,7 +274,7 @@ def controlla(path, per_nome, radice):
         basso = nofx.lower()
         for frase in FRASI_IA:
             if frase in basso:
-                out.append(("WARN", n, f'formula da stile IA: "{frase}"'))
+                out.append(("WARN", n, f'formula AI style: "{frase}"'))
         if "—" in nofx:
             out.append(("INFO", n, "trattino lungo —"))
         m = re.match(r"^\s*\*\*([^*]+)\*\*:?\s*$", riga)

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Divide un file unico di appunti in un file per lezione. Il testo non viene modificato.
+"""Splits a single raw notes file into one file per lesson. Text is not modified.
 
-Uso:
-  dividi-appunti.py FILE                    mostra il piano, non scrive nulla
-  dividi-appunti.py FILE --scrivi           crea i file nella cartella di FILE
-  dividi-appunti.py FILE --scrivi --dest CARTELLA
-  dividi-appunti.py FILE --per-sezione      un file per sezione invece che per gruppo
+Usage:
+  split-notes.py FILE                    shows the plan, writes nothing
+  split-notes.py FILE --write            creates files in FILE's folder
+  split-notes.py FILE --write --dest FOLDER
+  split-notes.py FILE --per-section      one file per section instead of per group
 
-Come ragiona: ogni titolo di primo livello del file è una sezione. Per raggruppare le
-sezioni in una lezione usa la data nascosta nei nomi delle immagini ("Screenshot From
-2026-03-05 ..." e "Pasted image 20260305..." la contengono): le sezioni senza immagini
-prendono la data della sezione precedente, e sezioni consecutive con la stessa data
-formano una lezione. La data non finisce mai nel nome del file né nell'indice.
+How it works: every top-level heading of the file is a section. To group sections
+into a lesson it uses the hidden date in image names ("Screenshot From
+2026-03-05 ..." and "Pasted image 20260305..." contain it): sections without images
+take the date of the previous section, and consecutive sections with the same date
+form a lesson. The date never ends up in the file name nor in the index.
 
-Il file di partenza non viene toccato. Nessun file esistente viene sovrascritto.
+The source file is not touched. No existing file is overwritten.
 """
 import os
 import re
@@ -25,8 +25,8 @@ RE_WIKILINK = re.compile(r"\[\[([^\]\|#\n]*)")
 VIETATI = r'[\\/:*?"<>|#^\[\]]'
 
 
-def esci(msg):
-    print(f"ERRORE: {msg}")
+def exit_with(msg):
+    print(f"ERROR: {msg}")
     sys.exit(1)
 
 
@@ -40,7 +40,7 @@ def nome_file(titolo):
 
 
 def leggi_sezioni(righe):
-    """Divide il file sui titoli del livello più alto presente, ignorando i blocchi di codice."""
+    """Splits the file on the topmost heading level present, ignoring code blocks."""
     in_fence = False
     titoli = []
     for i, riga in enumerate(righe):
@@ -53,12 +53,12 @@ def leggi_sezioni(righe):
         if m:
             titoli.append((i, len(m.group(1)), m.group(2)))
     if not titoli:
-        esci("il file non ha titoli: non so dove dividerlo")
+        exit_with("file has no headings: I don't know where to split it")
     livello = min(l for _i, l, _t in titoli)
     inizi = [(i, t) for i, l, t in titoli if l == livello]
     sezioni = []
     if "".join(righe[: inizi[0][0]]).strip():
-        sezioni.append({"titolo": "Premessa", "inizio": 0, "fine": inizi[0][0], "corpo_da": 0})
+        sezioni.append({"titolo": "Preamble", "inizio": 0, "fine": inizi[0][0], "corpo_da": 0})
     for n, (i, t) in enumerate(inizi):
         fine = inizi[n + 1][0] if n + 1 < len(inizi) else len(righe)
         sezioni.append({"titolo": pulisci_titolo(t), "inizio": i, "fine": fine, "corpo_da": i + 1})
@@ -92,7 +92,7 @@ def raggruppa(sezioni, per_sezione):
             lezioni.append({"data": s["data"], "sezioni": [s]})
     for lez in lezioni:
         titoli = [s["titolo"] for s in lez["sezioni"]]
-        titolo = ", ".join(titoli[:3]) + (" ecc" if len(titoli) > 3 else "")
+        titolo = ", ".join(titoli[:3]) + (" etc" if len(titoli) > 3 else "")
         lez["titolo"] = titolo
         base = nome_file(titolo)
         lez["file"] = base + ".md"
@@ -108,7 +108,7 @@ def raggruppa(sezioni, per_sezione):
 
 
 def componi(lez, righe, livello, annidati):
-    """Testo della nota: # titolo, poi le sezioni. I titoli annidati scalano di conseguenza."""
+    """Note text: # title, then sections. Nested headings scale accordingly."""
     singola = len(lez["sezioni"]) == 1
     out = [f"# {lez['titolo']}\n", "\n"]
     for s in lez["sezioni"]:
@@ -137,21 +137,21 @@ def main():
     if not args or "-h" in args or "--help" in args:
         print(__doc__.strip())
         return
-    scrivi = "--scrivi" in args
-    per_sezione = "--per-sezione" in args
+    scrivi = "--write" in args
+    per_sezione = "--per-section" in args
     dest = None
     if "--dest" in args:
         i = args.index("--dest")
         if i + 1 >= len(args):
-            esci("manca la cartella dopo --dest")
+            exit_with("missing folder after --dest")
         dest = args[i + 1]
         del args[i: i + 2]
     posizionali = [a for a in args if not a.startswith("--")]
     if len(posizionali) != 1:
-        esci("indica un solo file da dividere")
+        exit_with("specify a single file to split")
     sorgente = posizionali[0]
     if not os.path.isfile(sorgente):
-        esci(f"file non trovato: {sorgente}")
+        exit_with(f"file not found: {sorgente}")
     dest = dest or os.path.dirname(sorgente) or "."
 
     with open(sorgente, encoding="utf-8") as f:
@@ -160,25 +160,25 @@ def main():
     assegna_date(sezioni, righe)
     lezioni = raggruppa(sezioni, per_sezione)
 
-    print(f"{os.path.basename(sorgente)}: {len(righe)} righe, {len(sezioni)} sezioni -> {len(lezioni)} file in {dest}/\n")
+    print(f"{os.path.basename(sorgente)}: {len(righe)} lines, {len(sezioni)} sections -> {len(lezioni)} files in {dest}/\n")
     for lez in lezioni:
         nota = ""
         if lez["data"] is None:
-            nota = "   <- nessuna immagine: gruppo a sé, uniscilo a mano se serve"
+            nota = "   <- no image: separate group, merge manually if needed"
         elif lez["dedotta"]:
-            nota = "   <- raggruppata con la sezione precedente"
-        print(f"{lez['righe']:>5} righe  {lez['file']}{nota}")
+            nota = "   <- grouped with previous section"
+        print(f"{lez['righe']:>5} lines  {lez['file']}{nota}")
 
     esistenti = [lez["file"] for lez in lezioni if os.path.exists(os.path.join(dest, lez["file"]))]
     if not scrivi:
-        print("\nNon ho scritto nulla. I gruppi seguono le immagini di ogni sezione: controllali.")
+        print("\nI wrote nothing. Groups follow images in each section: check them.")
         if esistenti:
-            print(f"ATTENZIONE: {len(esistenti)} di questi file esistono già: con --scrivi mi fermerei senza creare nulla.")
-        print("Per creare i file: aggiungi --scrivi. Per un file per sezione: --per-sezione.")
+            print(f"WARNING: {len(esistenti)} of these files already exist: with --write I would stop without creating anything.")
+        print("To create files: add --write. For one file per section: --per-section.")
         return
 
     if esistenti:
-        esci("questi file esistono già, non sovrascrivo nulla: " + "; ".join(esistenti))
+        exit_with("these files already exist, I overwrite nothing: " + "; ".join(esistenti))
     os.makedirs(dest, exist_ok=True)
     for lez in lezioni:
         with open(os.path.join(dest, lez["file"]), "x", encoding="utf-8") as f:
@@ -195,15 +195,15 @@ def main():
         if nuove:
             with open(indice, "a", encoding="utf-8") as f:
                 f.write(("" if contenuto.endswith("\n") else "\n") + "".join(nuove))
-        print(f"\nIndice aggiornato: {indici[0]} (+{len(nuove)} righe)")
+        print(f"\nIndex updated: {indici[0]} (+{len(nuove)} lines)")
     else:
-        indice = os.path.join(dest, f"00 Indice - {cartella}.md")
+        indice = os.path.join(dest, f"00 Index - {cartella}.md")
         with open(indice, "x", encoding="utf-8") as f:
-            f.write(f"# Indice - {cartella}\n\n" + "".join(riga_indice(l) for l in lezioni))
-        print(f"\nIndice creato: {os.path.basename(indice)}")
+            f.write(f"# Index - {cartella}\n\n" + "".join(riga_indice(l) for l in lezioni))
+        print(f"\nIndex created: {os.path.basename(indice)}")
 
-    print(f"Creati {len(lezioni)} file. Il file di partenza è intatto: quando hai controllato, archivialo o cancellalo tu.")
-    print("Se un titolo o un nome non ti va, rinomina il file da Obsidian: i link dell'indice si aggiornano da soli.")
+    print(f"Created {len(lezioni)} files. Source file is intact: after checking, archive or delete it yourself.")
+    print("If a title or name does not suit you, rename the file from Obsidian: index links update automatically.")
 
 
 if __name__ == "__main__":

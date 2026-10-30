@@ -1,9 +1,9 @@
 ---
-description: Mostra il testo di una pagina del materiale. Uso - /slide "percorso/file.pdf" 28 (oppure 19-21, tutto, --cerca "testo")
+description: Shows the text of a material page. Usage - /slide "path/file.pdf" 28 (or 19-21, everything, --cerca "text")
 ---
 
-Questo è il testo estratto dal materiale del docente:
+This is the text extracted from the teacher's material:
 
-!`python3 .opencode/scripts/leggi-slide.py $ARGUMENTS`
+!`python3 .opencode/scripts/read-slides.py $ARGUMENTS`
 
-Riportalo così com'è, senza riassumerlo e senza modificare nessun file. Se l'output è un errore, spiega in una riga come correggere il comando.
+Return it as-is, without summarizing and without modifying any file. If the output is an error, explain in one line how to correct the command.

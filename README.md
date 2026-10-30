@@ -152,7 +152,7 @@ If a configuration is broken and OpenCode refuses to start:
 | `notes/.opencode/agents/audit.md` | `.opencode/agents/` | read-only audit: runs vault-audit.py and controlla-perdite.py |
 | `notes/.opencode/plugins/free-model-router/` | `.opencode/plugins/` | chooses the highest-ranked active free model without a probe request |
 | `notes/.opencode/tui.json` | `.opencode/tui.json` | TUI plugins configuration (DCP) |
-| `notes/.opencode/commands/` | `.opencode/commands/` | `/lezione`, `/rivedi`, `/revisore`, `/revisione`, `/slide`, `/dividi`, `/libro` |
+| `notes/.opencode/commands/` | `.opencode/commands/` | `/lezione`, `/rivedi`, `/revisore`, `/revisione`, `/close-note`, `/slide`, `/dividi`, `/libro` |
 | `notes/.opencode/scripts/` | `.opencode/scripts/` | slide reader (with Docling OCR fallback), structural audit, loss check, splitter, book reader |
 | `notes/prompt/` | `prompt/` | the guide for the user, the prompts for the external chats, the summary of the configuration |
 | `notes/libri/` | `libri/` | textbooks, one PDF per course (empty: you fill it) |

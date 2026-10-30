@@ -1,50 +1,50 @@
-# Prompt per lavorare fuori da OpenCode
+# Prompts for working outside OpenCode
 
-Lo stile non è ripetuto qui: sta solo in `.opencode/stile.md`, così non esistono due versioni da tenere allineate.
+Style is not repeated here: it is only in `.opencode/style.md`, so there are no two versions to keep aligned.
 
-## Antigravity (o un altro agente che vede il vault)
+## Antigravity (or another agent that sees the vault)
 
-Controllo di una nota, senza modifiche:
-
-```
-Leggi AGENTS.md e .opencode/stile.md e rispettali.
-Controlla la nota [PERCORSO] confrontandola con il materiale del docente che trovi nella stessa cartella. Non modificare nessun file.
-Restituisci un elenco, dal più grave al meno grave, una voce per riga:
-[ERRORE] contenuto sbagliato o impreciso, con il riferimento alla pagina del materiale
-[MANCA] definizioni, teoremi, passaggi, esempi, punti di elenco, numeri del materiale assenti nella nota
-[TAGLIA] parole che non portano informazione (mai un contenuto del docente o mio, nemmeno se sembra secondario)
-[STILE] ciò che viola .opencode/stile.md
-Non proporre di riscrivere ciò che è corretto e chiaro. Niente premesse.
-```
-
-Lavoro su una nota:
+Check a note, without modifying it:
 
 ```
-Leggi AGENTS.md e .opencode/stile.md e rispettali.
-Lavora sulla nota [PERCORSO]. Esegui i segnaposto // ... //, correggi gli errori e aggiungi ciò che manca usando il materiale del docente nella stessa cartella. Il testo già corretto e chiaro resta com'è e nessuna informazione va tolta. Chiudi la nota con il callout [!info] Sintesi. Non creare altri file.
-Prima di modificare esegui python3 .opencode/scripts/controlla-perdite.py "[PERCORSO]" --salva. Alla fine esegui lo stesso comando senza --salva, rimetti ciò che risulta perso, poi esegui python3 .opencode/scripts/vault-audit.py "[PERCORSO]" e chiudi con un riepilogo di 5 righe al massimo.
+Read AGENTS.md and .opencode/style.md and apply them.
+Check the note [PATH] comparing it with the teacher's material found in the same folder. Do not modify any file.
+Return a list, from most to least severe, one item per line:
+[ERROR] incorrect or imprecise content, with reference to the material page
+[MISSING] definitions, theorems, passages, examples, list items, numbers from the material missing in the note
+[CUT] words that carry no information (never teacher's or my content, even if it seems secondary)
+[STYLE] what violates .opencode/style.md
+Do not propose rewriting what is correct and clear. No preambles.
 ```
 
-## Chat web (ChatGPT, Claude, Gemini)
-
-Allega `.opencode/stile.md`, gli appunti e il materiale del docente, poi incolla:
+Work on a note:
 
 ```
-In allegato trovi stile.md, i miei appunti e il materiale del docente.
+Read AGENTS.md and .opencode/style.md and apply them.
+Work on note [PATH]. Execute the placeholders // ... //, correct errors and add what is missing using the teacher's material in the same folder. Correct and clear text remains as is and no information is removed. Close the note with the callout [!info] Summary. Do not create other files.
+Before modifying run python3 .opencode/scripts/check-losses.py "[PATH]" --save. At the end run the same command without --save, put back what resulted lost, then run python3 .opencode/scripts/vault-audit.py "[PATH]" and close with a summary of at most 5 lines.
+```
 
-Compito: [scegline uno]
-- integra i miei appunti: esegui i segnaposto // ... //, correggi gli errori e aggiungi ciò che manca rispetto al materiale. Il testo già corretto e chiaro resta com'è, parola per parola.
-- scrivi la nota da zero dal materiale del docente: appunti da studente, non una dispensa. Ogni slide di contenuto va coperta per intero: definizioni, teoremi, algoritmi, tutti gli esempi, tutti i punti degli elenchi.
-- asciuga questa nota togliendo solo parole: nessuna informazione va persa.
+## Web chat (ChatGPT, Claude, Gemini)
 
-Regole:
-- segui stile.md alla lettera; se i miei appunti e stile.md dicono cose diverse, valgono i miei appunti;
-- all'esame devo riportare ciò che ha detto il docente: tutto ciò che sta nei miei appunti e nel materiale deve restare nella nota. Puoi sistemare la forma, correggere e aggiungere; puoi togliere solo parole che non portano informazione. Nel dubbio, tieni;
-- se non sei sicuro di un contenuto non inventare: lascia > [!todo] con cosa manca;
-- i nomi dei file delle immagini vanno copiati identici;
-- il codice che serve alla teoria resta nella nota in un blocco; un esercizio o una soluzione completa vanno in un blocco a parte con il percorso esercizi/ in cui salvarlo.
+Attach `.opencode/style.md`, your notes and the teacher's material, then paste:
 
-Rispondi solo con la nota in un blocco markdown, seguita da un riepilogo di 5 righe al massimo: cosa hai aggiunto, corretto, tolto, e i todo lasciati.
+```
+In attachment you find style.md, my notes and the teacher's material.
 
-Titolo della lezione: [TITOLO]
+Task: [choose one]
+- integrate my notes: execute the placeholders // ... //, correct errors and add what is missing compared to the material. Correct and clear text remains as is, word for word.
+- write the note from scratch from the teacher's material: student notes, not a handout. Every content slide must be covered in full: definitions, theorems, algorithms, all examples, all list items.
+- condense this note removing only words: no information is removed.
+
+Rules:
+- follow style.md to the letter; if my notes and style.md say different things, my notes prevail;
+- for the exam I must report what the teacher said: everything in my notes and in the material must remain in the note. You can fix the form, correct and add; you can remove only words that do not carry information. In doubt, keep;
+- if you are not sure about content do not invent: leave > [!todo] with what is missing;
+- image file names must be copied identically;
+- code that serves theory remains in the note in a block; an exercise or complete solution goes in a separate block with the esercizi/ path where to save it.
+
+Answer only with the note in a markdown block, followed by a summary of at most 5 lines: what you added, corrected, removed, and todos left.
+
+Lesson title: [TITLE]
 ```

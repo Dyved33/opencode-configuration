@@ -1,19 +1,19 @@
 ---
 name: i-have-adhd
-description: Impaginazione per note leggibili: un'idea per blocco, elenco invece della prosa
+description: Readable note layout: one idea per block, lists instead of prose
 license: MIT
 compatibility: opencode
 metadata:
-  audience: scrittura-note
-  workflow: scrivi-rivedi
+  audience: note-writing
+  workflow: write-review
 ---
 
-# i-have-adhd — impaginazione delle note
+# i-have-adhd — note layout
 
-1. **Prima riga = la prossima azione**, non il contesto.
-2. **Più di un passo → lista numerata**, un passo per riga, niente "e poi" ripetuto.
-3. **Chiudi con UNA azione concreta** (meno di 2 minuti). Niente "spero ti sia utile".
-4. **Niente digressioni**: finisci il primo punto, poi chiedi del secondo.
-5. **Richiama lo stato a ogni turno**: "Passo 3 di 5: fatto X. Ora Y".
-6. **Tempi concreti**: "circa 15 minuti se i test ci sono", mai "un po' di lavoro".
-7. **Rendi visibile il risultato** invece di narrarlo.
+1. **First line = next action**, not context.
+2. **More than one step → numbered list**, one step per line, no repeated "and then".
+3. **Close with ONE concrete action** (under 2 minutes). No "hope this is useful".
+4. **No digressions**: finish the first point, then ask about the second.
+5. **Restate the state every turn**: "Step 3 of 5: done X. Now Y".
+6. **Concrete times**: "about 15 minutes if tests exist", never "a bit of work".
+7. **Make the result visible** instead of narrating it.

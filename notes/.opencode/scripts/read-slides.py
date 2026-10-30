@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Legge il testo del materiale del docente (PDF, PPTX, PPT) una pagina alla volta.
+"""Reads the teacher's material text (PDF, PPTX, PPT) one page at a time.
 
-Uso:
-  leggi-slide.py FILE                  elenco delle pagine con la prima riga di ognuna
-  leggi-slide.py FILE 28               testo della pagina 28
-  leggi-slide.py FILE 19-21            testo delle pagine da 19 a 21
-  leggi-slide.py FILE tutto            testo di tutto il file
-  leggi-slide.py FILE --cerca "testo"  pagine in cui compare il testo
+Usage:
+  read-slides.py FILE                  list of pages with the first line of each
+  read-slides.py FILE 28               text of page 28
+  read-slides.py FILE 19-21            text of pages 19 to 21
+  read-slides.py FILE all              text of the whole file
+  read-slides.py FILE --search "text"  pages where the text appears
 
-Non scrive nulla nel vault. I .ppt vengono convertiti in una cartella temporanea.
+Writes nothing in the vault. .ppt files are converted in a temporary folder.
 
-Se un PDF o un PPTX non hanno testo estraibile (sono pagine immagine), il testo
-viene letto con Docling (OCR), quando il file non è troppo lungo. Per forzare
-Docling su file lunghi: LEGGI_SLIDE_DOCLING_FORZA=1. Per cambiare la soglia di
-pagine: LEGGI_SLIDE_DOCLING_LIMITE=N (default 60).
+If a PDF or PPTX has no extractable text (image pages), text is read with Docling (OCR),
+when the file is not too long. To force Docling on long files:
+READ_SLIDES_DOCLING_FORZA=1. To change the page threshold: READ_SLIDES_DOCLING_LIMITE=N (default 60).
 """
 import hashlib
 import os
@@ -34,24 +33,24 @@ NS = {
 }
 
 
-def esci(msg):
-    print(f"ERRORE: {msg}")
+def exit_with(msg):
+    print(f"ERROR: {msg}")
     sys.exit(1)
 
 
-def pagine_pdf(path):
+def pdf_pages(path):
     if not shutil.which("pdftotext"):
-        esci("pdftotext non installato (pacchetto poppler-utils)")
+        exit_with("pdftotext not installed (poppler-utils package)")
     r = subprocess.run(["pdftotext", "-layout", path, "-"], capture_output=True)
     if r.returncode != 0:
-        esci(f"pdftotext non riesce a leggere il file: {r.stderr.decode(errors='replace').strip()}")
-    pagine = r.stdout.decode("utf-8", errors="replace").split("\f")
-    if pagine and not pagine[-1].strip():
-        pagine.pop()
-    return pagine
+        exit_with(f"pdftotext cannot read the file: {r.stderr.decode(errors='replace').strip()}")
+    pages = r.stdout.decode("utf-8", errors="replace").split("\f")
+    if pages and not pages[-1].strip():
+        pages.pop()
+    return pages
 
 
-def pagine_pptx(path):
+def pptx_pages(path):
     with zipfile.ZipFile(path) as z:
         nomi = set(z.namelist())
         ordine = []
@@ -83,13 +82,13 @@ def pagine_pptx(path):
         return pagine
 
 
-def pagine_ppt(path):
+def ppt_pages(path):
     soffice = shutil.which("soffice") or shutil.which("libreoffice")
     if not soffice:
-        esci("i file .ppt richiedono LibreOffice: convertilo in PDF a mano")
+        exit_with(".ppt files require LibreOffice: convert to PDF manually")
     st = os.stat(path)
     chiave = hashlib.sha1(f"{os.path.abspath(path)}{st.st_mtime}{st.st_size}".encode()).hexdigest()[:16]
-    cache = os.path.join(tempfile.gettempdir(), "leggi-slide-cache")
+    cache = os.path.join(tempfile.gettempdir(), "read-slides-cache")
     os.makedirs(cache, exist_ok=True)
     pdf = os.path.join(cache, chiave + ".pdf")
     if not os.path.exists(pdf):
@@ -100,20 +99,20 @@ def pagine_ppt(path):
             )
             prodotti = [f for f in os.listdir(tmp) if f.endswith(".pdf")]
             if r.returncode != 0 or not prodotti:
-                esci("conversione del .ppt fallita: convertilo in PDF a mano")
+                exit_with(".ppt conversion failed: convert to PDF manually")
             shutil.move(os.path.join(tmp, prodotti[0]), pdf)
-    return pagine_pdf(pdf)
+    return pdf_pages(pdf)
 
 
-LIMITE_DOCLING = int(os.environ.get("LEGGI_SLIDE_DOCLING_LIMITE", "60"))
+LIMITE_DOCLING = int(os.environ.get("READ_SLIDES_DOCLING_LIMITE", "60"))
 
 
-def pagine_docling(path):
+def docling_pages(path):
     try:
         from docling.document_converter import DocumentConverter
     except ImportError:
         print(
-            "docling non installato: esegui 'pip install --user --break-system-packages docling'",
+            "docling not installed: run 'pip install --user --break-system-packages docling'",
             file=sys.stderr,
         )
         return None
@@ -142,30 +141,30 @@ def maggior_parte_vuota(pagine):
 
 def carica(path):
     if not os.path.isfile(path):
-        esci(f"file non trovato: {path}")
+        exit_with(f"file not found: {path}")
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
-        pagine = pagine_pdf(path)
+        pagine = pdf_pages(path)
     elif ext == ".pptx":
-        pagine = pagine_pptx(path)
+        pagine = pptx_pages(path)
     elif ext == ".ppt":
-        return pagine_ppt(path)
+        return ppt_pages(path)
     else:
-        esci(f"formato non supportato: {ext} (ammessi: .pdf, .pptx, .ppt)")
+        exit_with(f"unsupported format: {ext} (allowed: .pdf, .pptx, .ppt)")
 
     if maggior_parte_vuota(pagine):
-        if len(pagine) <= LIMITE_DOCLING or os.environ.get("LEGGI_SLIDE_DOCLING_FORZA") == "1":
+        if len(pagine) <= LIMITE_DOCLING or os.environ.get("READ_SLIDES_DOCLING_FORZA") == "1":
             print(
-                f"[{os.path.basename(path)}] il testo non è estraibile: provo Docling, può richiedere tempo...",
+                f"[{os.path.basename(path)}] text not extractable: trying Docling, may take time...",
                 file=sys.stderr,
             )
-            alternativo = pagine_docling(path)
+            alternativo = docling_pages(path)
             if alternativo and not maggior_parte_vuota(alternativo):
                 return alternativo
         else:
             print(
-                f"[{os.path.basename(path)}] {len(pagine)} pagine senza testo: Docling saltato (file lungo). "
-                "Usa la foto delle slide oppure forza con LEGGI_SLIDE_DOCLING_FORZA=1.",
+                f"[{os.path.basename(path)}] {len(pagine)} pages without text: Docling skipped (long file). "
+                "Use slide photo or force with READ_SLIDES_DOCLING_FORZA=1.",
                 file=sys.stderr,
             )
     return pagine
@@ -180,15 +179,15 @@ def prima_riga(testo):
     for riga in testo.splitlines():
         if riga.strip():
             return " ".join(riga.split())[:80]
-    return "(solo immagine, nessun testo)"
+    return "(image only, no text)"
 
 
 def stampa(pagine, a, b):
     tot = len(pagine)
     for n in range(a, b + 1):
-        print(f"=== pagina {n}/{tot} ===")
+        print(f"=== page {n}/{tot} ===")
         testo = pagine[n - 1].strip("\n")
-        print(testo if testo.strip() else "(solo immagine, nessun testo: guardala a mano)")
+        print(testo if testo.strip() else "(image only, no text: check manually)")
         print()
 
 
@@ -201,16 +200,16 @@ def main():
     pagine = carica(path)
     tot = len(pagine)
     if tot == 0:
-        esci("nessuna pagina letta")
+        exit_with("no pages read")
     vuote = sum(1 for p in pagine if not p.strip())
 
     if len(args) == 1:
-        print(f"{os.path.basename(path)}: {tot} pagine")
+        print(f"{os.path.basename(path)}: {tot} pages")
         for i, p in enumerate(pagine, 1):
             print(f"{i:>4}  {prima_riga(p)}")
-    elif args[1] == "--cerca":
+    elif args[1] == "--search":
         if len(args) < 3:
-            esci('manca il testo da cercare: --cerca "testo"')
+            exit_with('missing search text: --search "text"')
         ago = normalizza(" ".join(args[2:]))
         trovate = 0
         for i, p in enumerate(pagine, 1):
@@ -219,25 +218,24 @@ def main():
                     print(f"p. {i}: {' '.join(riga.split())[:140]}")
                     trovate += 1
                     if trovate >= 40:
-                        print("... (altri risultati omessi: restringi la ricerca)")
+                        print("... (other results omitted: narrow search)")
                         return
         if not trovate:
-            print(f'"{" ".join(args[2:])}" non compare in nessuna pagina')
-    elif args[1] == "tutto":
+            print(f'"{" ".join(args[2:])}" does not appear on any page')
+    elif args[1] == "all":
         stampa(pagine, 1, tot)
     else:
         m = re.fullmatch(r"(\d+)(?:-(\d+))?", args[1])
         if not m:
-            esci(f"pagina non valida: {args[1]} (usa 28, 19-21 oppure tutto)")
+            exit_with(f"invalid page: {args[1]} (use 28, 19-21 or all)")
         a = int(m.group(1))
         b = int(m.group(2) or a)
         if a < 1 or b > tot or a > b:
-            esci(f"intervallo fuori dal file: il file ha {tot} pagine")
+            exit_with(f"range out of file: file has {tot} pages")
         stampa(pagine, a, b)
 
     if vuote > tot / 2:
-        print(f"ATTENZIONE: {vuote} pagine su {tot} sono senza testo. Il file è fatto di immagini: il contenuto va letto a mano.")
-
+        print(f"WARNING: {vuote} pages out of {tot} have no text. File is image-based: content must be read manually.")
 
 if __name__ == "__main__":
     main()

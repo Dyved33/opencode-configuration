@@ -150,7 +150,7 @@ else
     fail "opencode.json is not valid JSON: OpenCode will not start"
   fi
 
-  for f in .opencode/style.md .opencode/regole.md .opencode/agents .opencode/commands; do
+  for f in .opencode/style.md .opencode/rules.md .opencode/agents .opencode/commands; do
     if [ -e "$TARGET/$f" ]; then
       ok "$f"
     else
@@ -271,8 +271,8 @@ section "Writing rules (they are inside the configuration, nothing to install)"
 if [ -n "$TARGET" ] && [ -f "$TARGET/.opencode/rules.md" ]; then
   ok ".opencode/rules.md"
 else
-  warn ".opencode/regole.md is missing: the anti-slop and layout rules won't be loaded"
-  hint "copy it from the payload: cp .opencode/regole.md \"$TARGET/.opencode/\""
+  warn ".opencode/rules.md is missing: the anti-slop and layout rules won't be loaded"
+  hint "copy it from the payload: cp .opencode/rules.md \"$TARGET/.opencode/\""
 fi
 
 if [ -n "$TARGET" ] && [ -f "$TARGET/.opencode/dcp.jsonc" ]; then

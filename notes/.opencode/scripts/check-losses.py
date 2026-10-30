@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Controlla che in una nota non si siano perse informazioni rispetto alla fonte.
+"""Checks that no information has been lost in a note compared to the source.
 
-Uso:
-  controlla-perdite.py NOTA --salva         salva una copia della nota PRIMA di modificarla
-  controlla-perdite.py NOTA                 confronta la nota con la copia salvata
-                                            (se non c'è, con l'ultimo commit git)
-  controlla-perdite.py NOTA --con FILE      confronta la nota con appunti grezzi (.txt, .md)
-                                            o con il materiale del docente (.pdf, .pptx, .ppt)
+Usage:
+  check-losses.py NOTE --save         saves a copy of the note BEFORE modifying it
+  check-losses.py NOTE                compares the note with the saved copy
+                                      (if missing, with the last git commit)
+  check-losses.py NOTE --with FILE    compares the note with raw notes (.txt, .md)
+                                      or with the teacher's material (.pdf, .pptx, .ppt)
 
-Cosa cerca nella fonte e non trova più nella nota: formule, righe di codice, immagini,
-numeri, e le righe (o le slide) che non ritrova.
+What it looks for in the source and no longer finds in the note: formulas, code lines,
+images, numbers, and lines (or slides) it no longer finds.
 
-I file di testo collegati dalla nota con un wikilink (per esempio il codice in esercizi/)
-vengono letti e contati come se fossero dentro la nota: un esercizio spostato in un file
-non risulta perso.
+Text files linked from the note via a wikilink (e.g. code in esercizi/) are read and
+counted as if they were inside the note: an exercise moved to a file does not show as lost.
 
-È un controllo sulle parole, non sul significato: ogni voce è "da controllare", non un
-errore certo. Una frase riscritta con altre parole può essere segnalata; una frase
-segnalata va riletta nella fonte e, se l'informazione manca davvero, rimessa nella nota.
-Le copie salvate stanno in .opencode/originali/.
+It is a word-based check, not meaning-based: every item is "to check", not a certain
+error. A sentence rewritten with other words may be flagged; a flagged sentence must
+be reread in the source and, if the information is truly missing, put back in the note.
+Saved copies are in .opencode/originali/.
 """
 import os
 import re
@@ -28,12 +27,12 @@ import unicodedata
 
 QUI = os.path.dirname(os.path.abspath(__file__))
 ORIGINALI = os.path.join(os.path.dirname(QUI), "originali")
-SOGLIA_RIGA = 0.6     # sotto questa quota di parole ritrovate nello stesso punto la riga è segnalata
+SOGLIA_RIGA = 0.6     # below this ratio of words found in the same spot, the line is reported
 SOGLIA_SLIDE = 0.4
 MAX_VOCI = 60
 
 STOP = set("""
-alla alle allo agli anche ancora avere aveva base bene caso come cosa cose cosi cioe con cui
+a alla alle allo agli anche ancora avere aveva base bene caso come cosa cose cosi cioe con cui
 dalla dalle dallo dagli degli della delle dello dentro deve devono dopo dove dunque ecco
 essa esse essere esso fare fatto fino formato fra hanno infatti inoltre loro meno mentre
 molto nella nelle nello negli ogni oppure ossia parte perche pero piu poi possono prima
@@ -44,8 +43,8 @@ una uno viene vengono verso volta
 """.split())
 
 
-def esci(msg):
-    print(f"ERRORE: {msg}")
+def exit_with(msg):
+    print(f"ERROR: {msg}")
     sys.exit(1)
 
 
@@ -55,7 +54,7 @@ def senza_accenti(s):
 
 
 def parole(testo):
-    """Parole di contenuto, ridotte alle prime 5 lettere per reggere plurali e coniugazioni."""
+    """Content words, reduced to first 5 letters to handle plurals and conjugations."""
     out = set()
     for p in re.findall(r"[a-z]{4,}", senza_accenti(testo)):
         if p not in STOP:
@@ -77,7 +76,7 @@ def formule(testo):
 
 
 def blocchi_codice(righe):
-    """Righe dentro i blocchi ```; restituisce (righe di codice, righe fuori dal codice)."""
+    """Lines inside ``` blocks; returns (code lines, non-code lines)."""
     codice, fuori = [], []
     dentro = False
     for n, riga in enumerate(righe, 1):
@@ -104,7 +103,7 @@ ESTENSIONI_TESTO = {
 
 
 def allegati(nota_testo, cartella):
-    """Testo dei file collegati dalla nota (codice in esercizi/): contano come parte della nota."""
+    """Text of files linked from the note (code in esercizi/): counts as part of the note."""
     pezzi = []
     for target in RE_LINK_FILE.findall(nota_testo):
         if os.path.splitext(target)[1].lower() not in ESTENSIONI_TESTO:
@@ -144,11 +143,11 @@ def versione_git(nota):
 
 
 def pagine_materiale(path):
-    r = subprocess.run([sys.executable, os.path.join(QUI, "leggi-slide.py"), path, "tutto"],
+    r = subprocess.run([sys.executable, os.path.join(QUI, "read-slides.py"), path, "all"],
                        capture_output=True)
     testo = r.stdout.decode("utf-8", errors="replace")
     if testo.startswith("ERRORE"):
-        esci(testo.strip()[8:])
+        exit_with(testo.strip()[8:])
     pagine = []
     for blocco in re.split(r"^=== pagina (\d+)/\d+ ===$", testo, flags=re.M)[1:]:
         pagine.append(blocco)
@@ -162,7 +161,7 @@ def mostra(titolo, voci):
     for v in voci[:MAX_VOCI]:
         print(f"  {v}")
     if len(voci) > MAX_VOCI:
-        print(f"  ... e altre {len(voci) - MAX_VOCI}")
+        print(f"  ... and {len(voci) - MAX_VOCI} more")
     return len(voci)
 
 
@@ -172,24 +171,24 @@ def confronta_testo(fonte, nota_testo, etichetta):
     codice_f, fuori_f = blocchi_codice(righe_fonte)
     codice_n, _ = blocchi_codice(righe_nota)
     numeri_nota = numeri(nota_testo)
-    # ogni riga della fonte va ritrovata in un punto preciso della nota (finestra di 3 righe),
-    # non nel vocabolario di tutta la nota: così una riga tolta si vede anche se le sue
-    # parole compaiono altrove
+    # every source line must be found in a precise spot of the note (3-line window),
+    # not in the whole note vocabulary: so a removed line is visible even if its words
+    # appear elsewhere
     per_riga = [parole(pulisci_markdown(r)) for r in righe_nota]
     finestre = [per_riga[i] | (per_riga[i + 1] if i + 1 < len(per_riga) else set())
                 | (per_riga[i + 2] if i + 2 < len(per_riga) else set()) for i in range(len(per_riga))]
     tot = 0
 
     perse = sorted(formule(fonte) - formule(nota_testo), key=len, reverse=True)
-    tot += mostra("Formule che non trovo più", [f"${f[:110]}$" for f in perse])
+    tot += mostra("Formulas no longer found", [f"${f[:110]}$" for f in perse])
 
     codice_nota = {re.sub(r"\s+", "", r) for _n, r in codice_n}
-    perse = [f"riga {n}: {r.strip()[:110]}" for n, r in codice_f
+    perse = [f"line {n}: {r.strip()[:110]}" for n, r in codice_f
              if len(re.sub(r"\s+", "", r)) > 3 and re.sub(r"\s+", "", r) not in codice_nota]
-    tot += mostra("Righe di codice che non trovo più", perse)
+    tot += mostra("Code lines no longer found", perse)
 
     perse = sorted(immagini(fonte) - immagini(nota_testo))
-    tot += mostra("Immagini che non trovo più", perse)
+    tot += mostra("Images no longer found", perse)
 
     voci_numeri, voci_righe = [], []
     for n, riga in fuori_f:
@@ -197,14 +196,14 @@ def confronta_testo(fonte, nota_testo, etichetta):
         senza_formule = re.sub(r"\$[^$]*\$", " ", pulita)
         mancanti = sorted(numeri(senza_formule) - numeri_nota)
         if mancanti:
-            voci_numeri.append(f"riga {n}: {', '.join(mancanti)}  <- {pulita.strip()[:90]}")
+            voci_numeri.append(f"line {n}: {', '.join(mancanti)}  <- {pulita.strip()[:90]}")
         p = parole(senza_formule)
         if len(p) >= 3:
             quota = max((len(p & f) / len(p) for f in finestre), default=0)
             if quota < SOGLIA_RIGA:
-                voci_righe.append(f"riga {n} ({int(quota * 100)}% ritrovato): {pulita.strip()[:120]}")
-    tot += mostra("Numeri che non trovo più", voci_numeri)
-    tot += mostra(f"Righe di {etichetta} che non ritrovo nella nota", voci_righe)
+                voci_righe.append(f"line {n} ({int(quota * 100)}% found): {pulita.strip()[:120]}")
+    tot += mostra("Numbers no longer found", voci_numeri)
+    tot += mostra(f"Lines of {etichetta} not found in the note", voci_righe)
     return tot
 
 
@@ -220,14 +219,14 @@ def confronta_slide(pagine, nota_testo):
         quota = len(p & parole_nota) / len(p)
         prima = next((" ".join(r.split()) for r in testo.splitlines() if r.strip()), "")
         if quota < SOGLIA_SLIDE:
-            voci.append(f"pagina {n} ({int(quota * 100)}% ritrovato): {prima[:100]}")
+            voci.append(f"page {n} ({int(quota * 100)}% found): {prima[:100]}")
         mancanti = sorted(x for x in numeri(testo) - numeri_nota if len(x) > 1)
         if mancanti and quota >= SOGLIA_SLIDE:
-            voci_numeri.append(f"pagina {n}: {', '.join(mancanti[:12])}")
-    tot = mostra("Pagine del materiale poco o per nulla presenti nella nota", voci)
-    tot += mostra("Numeri del materiale che non trovo nella nota", voci_numeri)
+            voci_numeri.append(f"page {n}: {', '.join(mancanti[:12])}")
+    tot = mostra("Material pages little or not at all present in the note", voci)
+    tot += mostra("Material numbers not found in the note", voci_numeri)
     if vuote:
-        print(f"\n{vuote} pagine con poco o nessun testo (titoli, immagini): non controllabili, guardale a mano.")
+        print(f"\n{vuote} pages with little or no text (titles, images): not checkable, check manually.")
     return tot
 
 
@@ -237,19 +236,19 @@ def main():
         print(__doc__.strip())
         return
     con = None
-    if "--con" in args:
-        i = args.index("--con")
+    if "--with" in args:
+        i = args.index("--with")
         if i + 1 >= len(args):
-            esci("manca il file dopo --con")
+            exit_with("missing file after --with")
         con = args[i + 1]
         del args[i: i + 2]
-    salva = "--salva" in args
+    salva = "--save" in args
     posizionali = [a for a in args if not a.startswith("--")]
     if len(posizionali) != 1:
-        esci("indica una sola nota")
+        exit_with("specify a single note")
     nota = posizionali[0]
     if not os.path.isfile(nota):
-        esci(f"nota non trovata: {nota}")
+        exit_with(f"note not found: {nota}")
     with open(nota, encoding="utf-8") as f:
         nota_testo = f.read()
     copia = os.path.join(ORIGINALI, chiave(nota))
@@ -258,43 +257,42 @@ def main():
         os.makedirs(ORIGINALI, exist_ok=True)
         with open(copia, "w", encoding="utf-8") as f:
             f.write(nota_testo)
-        print(f"Copia salvata: {len(nota_testo.split())} parole, {nota_testo.count(chr(10)) + 1} righe.")
+        print(f"Copy saved: {len(nota_testo.split())} words, {nota_testo.count(chr(10)) + 1} lines.")
         return
 
     estesa = nota_testo + allegati(nota_testo, os.path.dirname(os.path.abspath(nota)) or ".")
 
     if con:
         if not os.path.isfile(con):
-            esci(f"file non trovato: {con}")
+            exit_with(f"file not found: {con}")
         est = os.path.splitext(con)[1].lower()
-        print(f"Confronto: {os.path.basename(nota)}  <-  {os.path.basename(con)}")
+        print(f"Comparison: {os.path.basename(nota)}  <-  {os.path.basename(con)}")
         if est in (".pdf", ".pptx", ".ppt"):
             tot = confronta_slide(pagine_materiale(con), estesa)
         else:
             with open(con, encoding="utf-8", errors="replace") as f:
-                tot = confronta_testo(f.read(), estesa, "appunti")
+                tot = confronta_testo(f.read(), estesa, "raw notes")
     else:
         if os.path.isfile(copia):
             with open(copia, encoding="utf-8") as f:
                 fonte = f.read()
-            origine = "copia salvata prima della modifica"
+            origine = "saved copy before modification"
         else:
             fonte = versione_git(nota)
-            origine = "ultimo commit git"
+            origine = "last git commit"
             if fonte is None:
-                esci("non c'è una copia salvata né un commit git di questa nota: "
-                     "prima di modificare esegui lo script con --salva")
+                exit_with("no saved copy nor git commit for this note: "
+                          "before modifying run the script with --save")
         prima, dopo = len(fonte.split()), len(nota_testo.split())
-        print(f"Confronto: {os.path.basename(nota)}  <-  {origine}")
-        print(f"Parole: {prima} -> {dopo} ({(dopo - prima) / max(prima, 1) * 100:+.0f}%)")
-        tot = confronta_testo(fonte, estesa, "testo")
+        print(f"Comparison: {os.path.basename(nota)}  <-  {origine}")
+        print(f"Words: {prima} -> {dopo} ({(dopo - prima) / max(prima, 1) * 100:+.0f}%)")
+        tot = confronta_testo(fonte, estesa, "text")
 
     if tot == 0:
-        print("\nNessuna perdita rilevata.")
+        print("\nNo loss detected.")
     else:
-        print(f"\n{tot} voci da controllare. Per ognuna: rileggi la fonte; se l'informazione manca "
-              "nella nota, rimettila. Se c'è con altre parole, va bene così.")
-
+        print(f"\n{tot} items to check. For each: reread the source; if the information is truly "
+              "missing in the note, put it back. If it is there with other words, it's fine.")
 
 if __name__ == "__main__":
     main()
