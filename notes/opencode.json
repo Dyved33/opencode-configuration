@@ -7,30 +7,20 @@
   },
   "default_agent": "plan",
   "instructions": [
-    ".opencode/style.md",
-    ".opencode/rules.md"
+    ".opencode/stile.md",
+    ".opencode/regole.md"
   ],
   "agents": {
-    "notes": {
+    "appunti": {
       "mode": "primary",
       "permissions": [
         { "action": "subagent", "resource": "*", "effect": "deny" },
-        { "action": "subagent", "resource": "reviewer", "effect": "allow" }
+        { "action": "subagent", "resource": "revisore", "effect": "allow" }
       ]
     },
-    "reviewer": {
+    "revisore": {
       "mode": "all",
       "permissions": [
-        { "action": "edit", "resource": "*", "effect": "deny" },
-        { "action": "subagent", "resource": "*", "effect": "deny" }
-      ]
-    },
-    "audit": {
-      "mode": "subagent",
-      "permissions": [
-        { "action": "read", "resource": "*", "effect": "allow" },
-        { "action": "shell", "resource": "python3 .opencode/scripts/vault-audit.py*", "effect": "allow" },
-        { "action": "shell", "resource": "python3 .opencode/scripts/check-losses.py*", "effect": "allow" },
         { "action": "edit", "resource": "*", "effect": "deny" },
         { "action": "subagent", "resource": "*", "effect": "deny" }
       ]
@@ -45,24 +35,21 @@
       "package": "@plannotator/opencode@latest",
       "options": { "workflow": "plan-agent", "planningAgents": ["plan"] }
     },
-    "@azumag/opencode-rate-limit-fallback@2.1.1"
+    "@azumag/opencode-rate-limit-fallback@2.1.0"
   ],
   "mcp": {
     "servers": {
-      "obsidian-search": { "type": "remote", "url": "http://127.0.0.1:8848/mcp", "protocol": "auto", "disabled": false }
+      "obsidian-search": { "type": "remote", "url": "http://127.0.0.1:8848/mcp", "protocol": "auto", "disabled": false, "pool": true }
     }
   },
   "tools": {
     "obsidian-search*": "deny"
   },
   "agent": {
-    "notes": {
+    "appunti": {
       "tools": { "obsidian-search*": "allow" }
     },
-    "reviewer": {
-      "tools": { "obsidian-search*": "allow" }
-    },
-    "audit": {
+    "revisore": {
       "tools": { "obsidian-search*": "allow" }
     }
   },
@@ -92,7 +79,7 @@
     { "action": "edit", "resource": "*.md", "effect": "allow" },
     { "action": "edit", "resource": "*/esercizi/*", "effect": "deny" },
     { "action": "edit", "resource": "AGENTS.md", "effect": "deny" },
-    { "action": "edit", "resource": ".opencode/style.md", "effect": "deny" },
+    { "action": "edit", "resource": ".opencode/stile.md", "effect": "deny" },
     { "action": "edit", "resource": "prompt/prompt_chat.md", "effect": "deny" },
     { "action": "edit", "resource": "prompt/README.md", "effect": "deny" },
     { "action": "read", "resource": "*", "effect": "allow" },
@@ -100,11 +87,11 @@
     { "action": "read", "resource": "*.env.*", "effect": "deny" },
     { "action": "shell", "resource": "*", "effect": "deny" },
     { "action": "shell", "resource": "python3 .opencode/scripts/vault-audit.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/read-slides.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/books.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/check-losses.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/split-notes.py*", "effect": "allow" },
-    { "action": "shell", "resource": "python3 .opencode/scripts/split-notes.py*--write*", "effect": "ask" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/leggi-slide.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/libri.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/controlla-perdite.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/dividi-appunti.py*", "effect": "allow" },
+    { "action": "shell", "resource": "python3 .opencode/scripts/dividi-appunti.py*--scrivi*", "effect": "ask" },
     { "action": "shell", "resource": "pdfinfo*", "effect": "allow" },
     { "action": "shell", "resource": "pdftotext*", "effect": "allow" },
     { "action": "shell", "resource": "pdftoppm*", "effect": "ask" },
@@ -138,6 +125,7 @@
     { "action": "shell", "resource": "git log*", "effect": "allow" },
     { "action": "shell", "resource": "git show*", "effect": "allow" },
     { "action": "shell", "resource": "obsidian-mcp-search status*", "effect": "allow" },
+    { "action": "mcp.use", "resource": "obsidian-search*", "effect": "allow" },
     { "action": "shell", "resource": "*env*", "effect": "deny" },
     { "action": "webfetch", "resource": "*", "effect": "allow" },
     { "action": "websearch", "resource": "*", "effect": "allow" },

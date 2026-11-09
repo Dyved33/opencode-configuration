@@ -1,128 +1,128 @@
-# Notes style
+# Stile degli appunti
 
-Single source for style. Applies to every lesson note. If a rule here and a note written by the user say different things, the user's note prevails.
+Unica fonte per lo stile. Vale per ogni nota di lezione. Se una regola qui e una nota scritta dall'utente dicono cose diverse, vale la nota dell'utente.
 
-## Principle
+## Principio
 
-These are notes from a student who understood the lesson, not a handout. They serve to study for the exam, where what the teacher said must be reported.
+Sono appunti di uno studente che ha capito la lezione, non una dispensa. Servono a studiare per l'esame, dove va riportato ciò che ha detto il docente.
 
-For this reason content is never lost: the note keeps everything that is in the user's notes, in the raw notes and in the teacher's material — definitions, theorems, proofs, formulas, code, images, examples, complete lists, numbers, special cases, observations and clarifications made verbally. You do not decide what is secondary: your job is to fix the form, correct errors and add what is missing.
+Per questo il contenuto non si perde mai: resta nella nota tutto ciò che sta negli appunti dell'utente, negli appunti grezzi e nel materiale del docente — definizioni, teoremi, dimostrazioni, formule, codice, immagini, esempi, elenchi completi, numeri, casi particolari, osservazioni e precisazioni fatte a voce. Non decidi tu cosa è secondario: il tuo lavoro è sistemare la forma, correggere gli errori e aggiungere ciò che manca.
 
-Only words that carry no information are removed: if removing a sentence loses even a single detail, the sentence remains and at most is shortened. In doubt, keep it.
+Si tolgono solo le parole che non portano informazione: se togliendo una frase perdi anche un solo dettaglio, la frase resta e al massimo si accorcia. Nel dubbio, tieni.
 
-Length has no limit: content decides it. A long lesson or a difficult concept produces a long note, and that is fine. What matters is density:
+La lunghezza non ha un limite: la decide il contenuto. Una lezione lunga o un concetto difficile producono una nota lunga, ed è giusto così. Quello che conta è la densità:
 
-- the same information is written once, in the place where it serves: if repeated identically in two places, keep the more complete version;
-- a difficult concept deserves all the explanation needed to understand it; a simple one one line;
-- the teacher's and user's examples all remain; add at most one per concept, and only if it helps;
-- if a paragraph can be said in half the words without losing information, say it in half the words.
+- la stessa informazione si scrive una volta sola, nel punto in cui serve: se è ripetuta identica in due punti tieni la versione più completa;
+- un concetto difficile merita tutta la spiegazione che serve per capirlo; uno semplice una riga;
+- gli esempi del docente e dell'utente restano tutti; di tuo ne aggiungi al massimo uno per concetto, e solo se aiuta;
+- se un paragrafo si può dire in metà delle parole senza perdere informazioni, va detto in metà delle parole.
 
-Three types of text, and only these:
+Tre tipi di testo, e solo questi:
 
-- **Dry definition**: one sentence, formal, with the teacher's notation.
-- **Discursive explanation**: says *why* or *how* a passage works, with simple words and even in first person ("if I am in $q_0$ and read $a$..."). It does not repeat the definition with other words.
-- **Callout**: examples, notes, warnings. They are outside the flow of the text.
+- **Definizione asciutta**: una frase, formale, con la notazione del docente.
+- **Spiegazione discorsiva**: dice *perché* o *come* funziona un passaggio, con parole semplici e anche in prima persona ("se mi trovo in $q_0$ e leggo $a$..."). Non ripete la definizione con altre parole.
+- **Callout**: esempi, note, avvertimenti. Stanno fuori dal flusso del testo.
 
-## What not to write
+## Cosa non scrivere
 
-- Introductions and closings: "In this lesson we will see", "In conclusion", "As we have seen".
-- Sections "Introduction", "Conclusion", "Key concepts", "Summary".
-- Empty emphasis: "it is important to note that", "fundamental", "crucial", "extremely", "strictly".
-- Catchy titles ("The engine of infinity"): the title says the topic and nothing else.
-- Every Word Capitalized in titles and labels.
-- Bold overload: only on the term being defined, the first time.
-- Lists where every point is "**Label:** generic sentence". A list serves when elements are truly parallel.
-- Callouts with titles like "Teacher's Note", "In-depth", "Historical context".
-- The same thing said twice. The only summary allowed is the synthesis at the end of the note.
+- Introduzioni e chiusure: "In questa lezione vedremo", "In conclusione", "Come abbiamo visto".
+- Sezioni "Introduzione", "Conclusioni", "Concetti chiave", "Riepilogo".
+- Enfasi vuota: "è importante notare che", "fondamentale", "cruciale", "estremamente", "strettamente".
+- Titoli a effetto ("Il motore dell'infinito"): il titolo dice l'argomento e basta.
+- Maiuscole Su Ogni Parola nei titoli e nelle etichette.
+- Grassetto a pioggia: va solo sul termine che viene definito, la prima volta.
+- Elenchi in cui ogni punto è "**Etichetta:** frase generica". Un elenco serve quando gli elementi sono davvero paralleli.
+- Callout con titoli come "Nota del Prof", "Approfondimento", "Contesto storico".
+- La stessa cosa detta due volte. L'unico riassunto ammesso è la sintesi in fondo alla nota.
 
-## Note structure
+## Struttura della nota
 
 ```markdown
-# Lesson title
+# Titolo della lezione
 
-## Main topic
-Text.
+## Argomento principale
+Testo.
 
-**Sub-topic:** text continuing on the same line.
+**Sotto-argomento:** testo che continua sulla stessa riga.
 
-> [!info] Summary:
-> - key point
-> - key point
+> [!info] Sintesi:
+> - punto chiave
+> - punto chiave
 ```
 
-- A single `#`, with the title. No frontmatter, no tags.
-- `##` for the lesson's topics. `###` only if a topic is really long. Never `####`.
-- Inside a section, to separate subtopics use the bold label at the start of the paragraph (`**Graph of an automaton:**`), not a title.
-- Titles without numbers, without bold, without emojis, with only the first letter capitalized.
-- No `---` lines between sections and no navigation section at the bottom.
-- The note always closes with a callout `> [!info] Summary:`: 3 to 6 points, one line each, with what from the lesson must be remembered. No new sentences and no long formulas. It is the last thing in the note and there is only one.
+- Un solo `#`, con il titolo. Niente frontmatter, niente tag.
+- `##` per gli argomenti della lezione. `###` solo se un argomento è davvero lungo. Mai `####`.
+- Dentro una sezione, per separare i sotto-argomenti usa l'etichetta in grassetto a inizio paragrafo (`**Grafo di un automa:**`), non un titolo.
+- Titoli senza numeri, senza grassetto, senza emoji, con la sola iniziale maiuscola.
+- Niente righe `---` tra le sezioni e niente sezione di navigazione in fondo.
+- La nota si chiude sempre con un callout `> [!info] Sintesi:`: da 3 a 6 punti, una riga ciascuno, con ciò che della lezione va ricordato. Niente frasi nuove e niente formule lunghe. È l'ultima cosa della nota e ce n'è una sola.
 
-## Labels
+## Etichette
 
-In italics, at the start of the paragraph, followed by a colon:
+In corsivo, a inizio paragrafo, seguite dai due punti:
 
-`*Definition:*` `*Theorem:*` `*Lemma:*` `*Proposition:*` `*Proof:*` `*Observation:*` `*Advantages:*` `*Disadvantages:*`
+`*Definizione:*` `*Teorema:*` `*Lemma:*` `*Proposizione:*` `*Dimostrazione:*` `*Osservazione:*` `*Vantaggi:*` `*Svantaggi:*`
 
-Other habits to keep:
+Altre abitudini da mantenere:
 
-- Lists with `-`. Numbered lists only for sequential steps.
-- The glossary with ` = ` after a formal term: `$Q$ is the set of states = all configurations the device can assume`.
-- `<u>...</u>` for the key sentence of a paragraph. At most one per section.
-- Italics for English terms and for the cited technical term (*busy-waiting*, *semWait*).
-- Arrows, dots and symbols are free: `->`, `=>`, `→`, `…` all fine.
+- Elenchi con `-`. Elenchi numerati solo per passi in sequenza.
+- La glossa con ` = ` dopo un termine formale: `$Q$ è l'insieme degli stati = tutte le configurazioni che il dispositivo può assumere`.
+- `<u>...</u>` per la frase chiave di un paragrafo. Al massimo una per sezione.
+- Corsivo per i termini inglesi e per il termine tecnico citato (*busy-waiting*, *semWait*).
+- Frecce, puntini e simboli sono liberi: `->`, `=>`, `→`, `…` vanno tutti bene.
 
-## Callouts
+## Callout
 
-Only these types, always lowercase:
+Solo questi tipi, sempre in minuscolo:
 
-| Type | Use |
+| Tipo | Uso |
 |---|---|
-| `[!example]` | example, solved exercise, image of a concrete case. Usually without title. |
-| `[!info]` | explanation in words of a formal passage (`In other words:`, `N.B.`) and final note summary (`Summary:`) |
-| `[!important]` | the thing that cannot be wrong at the exam. Rare. |
-| `[!warning]` | typical error, edge case. Typical title: `Attention:` |
-| `[!tip]` | reminder. Typical title: `Remember` |
-| `[!todo]` | point to review. See below. |
+| `[!example]` | esempio, esercizio svolto, immagine di un caso concreto. Di solito senza titolo. |
+| `[!info]` | spiegazione a parole di un passaggio formale (`In altre parole:`, `N.B.`) e sintesi finale della nota (`Sintesi:`) |
+| `[!important]` | la cosa che all'esame non si può sbagliare. Raro. |
+| `[!warning]` | errore tipico, caso limite. Titolo tipico: `Attenzione:` |
+| `[!tip]` | promemoria. Titolo tipico: `Ricorda` |
+| `[!todo]` | punto da rivedere. Vedi sotto. |
 
-A callout does not repeat the text preceding it. `[!info] Summary:` is reserved for closing the note; to explain in words a difficult formal passage use `[!info] In other words:`, in a few lines.
+Un callout non ripete il testo che lo precede. `[!info] Sintesi:` è riservato alla chiusura della nota; per spiegare a parole un passaggio formale difficile usa `[!info] In altre parole:`, in poche righe.
 
-## Formulas and code
+## Formule e codice
 
-- `$...$` in text. `$$...$$` on their own lines for long formulas or those deserving emphasis.
-- In formulas follow the notation already used in the note and by the teacher. Do not convert existing formulas.
-- Code and pseudocode always in a ` ``` ` block. The label after the three backticks is the one the user sets: the language (`c`, `java`) or a name (`Algorithm_of_Dekker`). Do not change it. In new blocks put the language if it is real code, otherwise a name without spaces.
-- The snippet that serves theory remains in the note. The whole exercise or complete solution does not: they are in `esercizi/<name>.<ext>`, in the course folder, and in the note only the relevant piece remains, with the wikilink `[[esercizi/es3.py|es3]]`.
-- Function and variable names in text in single quotes: `` `fork()` ``.
-- Tables only for comparisons with at least two columns of data.
+- `$...$` nel testo. `$$...$$` su righe proprie per le formule lunghe o che meritano risalto.
+- Nelle formule segui la notazione già usata nella nota e dal docente. Non convertire le formule esistenti.
+- Codice e pseudocodice sempre in un blocco ` ``` `. L'etichetta dopo i tre apici è quella che mette l'utente: il linguaggio (`c`, `java`) oppure un nome (`Algoritmo_di_Dekker`). Non cambiarla. Nei blocchi nuovi metti il linguaggio se è codice vero, altrimenti un nome senza spazi.
+- Lo snippet che serve alla teoria resta nella nota. L'esercizio intero o la soluzione completa no: stanno in `esercizi/<nome>.<ext>`, nella cartella del corso, e nella nota resta solo il pezzo rilevante con il wikilink `[[esercizi/es3.py|es3]]`.
+- Nomi di funzioni e variabili nel testo tra apici singoli: `` `fork()` ``.
+- Tabelle solo per confronti con almeno due colonne di dati.
 
-## Images
+## Immagini
 
-Images are inserted by the user and are in the `images/` folder next to the note. Do not rename, move, or invent them. In `src` goes only the file name, copied identically to how the user wrote it, without `images/` in front.
+Le immagini le inserisce l'utente e stanno nella cartella `images/` accanto alla nota. Non rinominarle, non spostarle, non inventarne. In `src` va il solo nome del file, copiato identico a come l'ha scritto l'utente, senza `images/` davanti.
 
-You cannot see images: do not describe what they show unless the user's text says so.
+Non puoi vedere le immagini: non descrivere cosa mostrano se non te lo dice il testo dell'utente.
 
-Exception: when the photo is taken by the agent with `pdftoppm` from a page of the material, the description is written from the text returned by OCR (`tesseract`). In `src` goes only the file name, example `slide-06.png`, without `images/` in front. Only what OCR reads is reported: no invented details.
+Eccezione: quando la foto la fa l'agent con `pdftoppm` da una pagina del materiale, la descrizione si scrive dal testo che l'OCR (`tesseract`) restituisce. In `src` va il solo nome del file, esempio `slide-06.png`, senza `images/` davanti. Si riporta solo ciò che l'OCR legge: niente dettagli inventati.
 
-Outside callouts each image uses one of these layouts. Which one to use is decided by the placeholder the user writes after the image; without placeholder, the decision is the question below:
+Fuori dai callout ogni immagine usa uno di questi layout. Quale usare lo dice il segnaposto che l'utente scrive dopo l'immagine; senza segnaposto a decidere è la domanda qui sotto:
 
-| User writes | Layout |
+| L'utente scrive | Layout |
 |---|---|
-| `![[x.png]]` (no placeholder) | first ask, see below; resized to 300 if the user does not choose another layout |
-| `![[x.png]] // adatta //` | adapted to page width |
-| `![[x.png]] // sotto: testo //` | with text below |
-| `![[x.png]] // lato: testo //` | with text beside. With `// lato //` without text, beside goes the following paragraph |
+| `![[x.png]]` (senza segnaposto) | prima si chiede, vedi sotto; ridimensionata a 300 se l'utente non sceglie un altro layout |
+| `![[x.png]] // adatta //` | adattata alla larghezza della pagina |
+| `![[x.png]] // sotto: testo //` | con scritta sotto |
+| `![[x.png]] // lato: testo //` | con testo a lato. Con `// lato //` senza testo, a lato va il paragrafo che segue |
 
-If the image has no placeholder — or if you are inserting it yourself with `pdftoppm` — ask which layout to use with the `question` tool: one question listing all images, in the order they appear, each with layout choices. No question for images inside a callout and for images already in a `<div>`: their layout is already decided (see below).
+Se l'immagine non ha un segnaposto — o se la stai inserendo tu con `pdftoppm` — chiedi quale layout usare con il tool `question`: una sola domanda che elenca tutte le immagini, nell'ordine in cui compaiono, ciascuna con le scelte di layout. Nessuna domanda per le immagini dentro un callout e per le immagini già in un `<div>`: il loro layout è già deciso (vedi sotto).
 
-- resized to 300
-- adapted to page width
-- with text below
-- with text beside
-- leave as is
+- ridimensionata a 300
+- adattata alla larghezza della pagina
+- con scritta sotto
+- con testo a lato
+- lasciala com'è
 
-For "with text below" and "with text beside" the text comes from OCR when it returns something useful (`parse` with `extractImages: true` on an image in `images/`, `tesseract` on a slide photo). If OCR returns nothing, ask the user to write the text in the same question; if they don't, fall back to resizing. Never invent what the image shows.
+Per "con scritta sotto" e "con testo a lato" il testo viene dall'OCR quando restituisce qualcosa di utile (`parse` con `extractImages: true` su un'immagine di `images/`, `tesseract` su una foto di slide). Se l'OCR non restituisce niente, chiedi all'utente di scrivere il testo nella stessa domanda; se non lo fa, ripiega su un ridimensionamento. Non inventare mai cosa mostra l'immagine.
 
-Resized:
+Ridimensionata:
 
 ```html
 <div style="display: flex; justify-content: center;">
@@ -130,7 +130,7 @@ Resized:
 </div>
 ```
 
-Adapted to page:
+Adattata alla pagina:
 
 ```html
 <div style="display: flex; justify-content: center;">
@@ -138,16 +138,16 @@ Adapted to page:
 </div>
 ```
 
-With text below:
+Con scritta sotto:
 
 ```html
 <div style="text-align: center;">
-  <img src="x.png" alt="Image" />
-  <p>Text</p>
+  <img src="x.png" alt="Immagine" />
+  <p>Testo</p>
 </div>
 ```
 
-With text beside:
+Con testo a lato:
 
 ```html
 <div style="display: flex; align-items: flex-start; gap: 20px;">
@@ -155,42 +155,42 @@ With text beside:
     <img src="x.png" style="width: 100%; border-radius: 8px;">
   </div>
   <div style="flex: 1.5;">
-  Text
+  Testo
   </div>
 </div>
 ```
 
-Inside a `<div>` Markdown does not work: italics with `<i>`, bold with `<b>`, no `$...$`. If the text beside has formulas, use the resized layout and put the text below, outside the div.
+Dentro un `<div>` il Markdown non funziona: corsivo con `<i>`, grassetto con `<b>`, niente `$...$`. Se il testo a lato ha formule, usa il layout ridimensionato e metti il testo sotto, fuori dal div.
 
-Inside a callout the image remains `![[x.png|300]]`.
+Dentro un callout l'immagine resta `![[x.png|300]]`.
 
-## User placeholders
+## Segnaposto dell'utente
 
-Outside code blocks, `// ... //` is an instruction for you, to execute at that point:
+Fuori dai blocchi di codice, `// ... //` è un'istruzione per te, da eseguire in quel punto:
 
-| Placeholder | What to do |
+| Segnaposto | Cosa fare |
 |---|---|
-| `// slide 28 //`, `// slide 19-21 //` | read those pages of the material and integrate the content here |
-| `// def X //`, `// tabella X //`, `// passaggi X //` | search X in the material and report it here |
-| any other text | it is a request: deepen, correct, add an example, etc. |
+| `// slide 28 //`, `// slide 19-21 //` | leggi quelle pagine del materiale e integra qui il contenuto |
+| `// def X //`, `// tabella X //`, `// passaggi X //` | cerca X nel materiale e riportalo qui |
+| qualsiasi altro testo | è una richiesta: approfondisci, correggi, aggiungi un esempio, ecc. |
 
-The placeholder disappears only when it has been executed. If you cannot execute it, replace it with a `[!todo]` that says what is missing.
+Il segnaposto sparisce solo quando è stato eseguito. Se non riesci a eseguirlo, sostituiscilo con un `[!todo]` che dice cosa manca.
 
 ## Todo
 
 ```markdown
-> [!todo] slide 28 not found in automi.pdf
+> [!todo] slide 28 non trovata in automi.pdf
 ```
 
-Leave a `[!todo]` when: a placeholder does not resolve, material and raw notes contradict and you don't know who is right, a passage seems wrong but you cannot verify it. One line, concrete. At every pass try to close existing `[!todo]`.
+Lascia un `[!todo]` quando: un segnaposto non si risolve, il materiale e gli appunti si contraddicono e non sai chi ha ragione, un passaggio ti sembra sbagliato ma non puoi verificarlo. Una riga, concreta. A ogni passata prova a chiudere i `[!todo]` già presenti.
 
-## Links
+## Collegamenti
 
-Link with a wikilink lessons of the same course when a concept is explained in another note: `[[File name|text]]`, or `[[File name#Section|text]]`. Only toward existing notes (check first), only at the first occurrence in the section, and without changing the text to make room for the link.
+Collega con un wikilink le lezioni dello stesso corso quando un concetto è spiegato in un'altra nota: `[[Nome del file|testo]]`, oppure `[[Nome del file#Sezione|testo]]`. Solo verso note che esistono (controlla prima), solo alla prima occorrenza nella sezione, e senza cambiare il testo per far posto al link.
 
-## Example
+## Esempio
 
-So no:
+Così no:
 
 ```markdown
 ### **Il Time-Sharing: Una Rivoluzione Interattiva**
@@ -202,24 +202,24 @@ Il **Time-sharing** (condivisione del tempo) è un paradigma fondamentale svilup
 > Il time-sharing permette quindi a più utenti di usare contemporaneamente la stessa macchina.
 ```
 
-So yes:
+Così sì:
 
 ```markdown
 ## Time-sharing
-The processor is shared among more users connected by terminal: the OS assigns in turn to each program a *quantum of processing*. The goal is no longer to maximize CPU usage (multiprogramming) but to minimize response time.
+Il processore viene condiviso fra più utenti collegati da terminale: il SO assegna a turno a ogni programma un *quanto di elaborazione*. L'obiettivo non è più massimizzare l'uso della CPU (multiprogrammazione) ma minimizzare il tempo di risposta.
 ```
 
-And this is the right register for definition, explanation and callout together:
+E questo è il registro giusto per definizione, spiegazione e callout insieme:
 
 ```markdown
-## Semaphores
-Mechanism to synchronize access to critical sections. A semaphore consists of an integer variable, a queue and three operations:
-- Initialization to a non-negative value
-- *semWait:* decrements the value. If it becomes negative, the process is suspended and put in queue
-- *semSignal:* increments the value. If it does not become positive, one of the processes in queue is reactivated
+## Semafori
+Meccanismo per sincronizzare l'accesso alle sezioni critiche. Un semaforo è formato da una variabile intera, una coda e tre operazioni:
+- Inizializzazione a un valore non negativo
+- *semWait:* decrementa il valore. Se diventa negativo, il processo è sospeso e messo in coda
+- *semSignal:* incrementa il valore. Se non diventa positivo, uno dei processi in coda è riattivato
 
-> [!info] In other words:
-> When the value is positive it says how many processes can still enter, when negative it says how many are in queue.
+> [!info] In altre parole:
+> Quando il valore è positivo dice quanti processi possono ancora entrare, quando è negativo dice quanti sono in coda.
 
-*Observation:* the process cannot know in advance if with *semWait* it will be suspended.
+*Osservazione:* il processo non può sapere in anticipo se con *semWait* sarà sospeso.
 ```

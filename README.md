@@ -142,11 +142,11 @@ If a configuration is broken and OpenCode refuses to start:
 |---|---|---|
 | `notes/AGENTS.md` | `AGENTS.md` | structure, 11 rules, tools table (read every session) |
 | `notes/opencode.json` | `opencode.json` | permissions (v2 ruleset), free models, rate limit fallback, obsidian-search MCP server, experimental todowrite |
-| `notes/.opencode/stile.md` | `.opencode/stile.md` | single source for the note style, loaded at every session |
-| `notes/.opencode/regole.md` | `.opencode/regole.md` | the writing discipline, loaded at every session: no filler text, one idea per block |
+| `notes/.opencode/style.md` | `.opencode/stile.md` | single source for the note style, loaded at every session (Italian name `stile.md` in David's vault) |
+| `notes/.opencode/rules.md` | `.opencode/regole.md` | the writing discipline, loaded at every session: no filler text, one idea per block (Italian name `regole.md` in David's vault) |
 | `notes/.opencode/dcp.jsonc` | `.opencode/dcp.jsonc` | how the context is pruned |
 | `notes/.opencode/rate-limit-fallback.json` | `.opencode/rate-limit-fallback.json` | ordered fallback chain; stops when exhausted |
-| `notes/.opencode/skills/` | `.opencode/skills/` | native skills: `no-ai-slop`, `i-have-adhd`, `note-quality` (loaded on demand) |
+| `notes/.opencode/skills/` | `.opencode/skills/` | native skills: `no-ai-slop`, `i-have-adhd`, `note-quality`, `note-sintesi` (loaded on demand) |
 | `notes/.opencode/agents/appunti.md` | `.opencode/agents/` | the agent that writes (`default_agent`) |
 | `notes/.opencode/agents/revisore.md` | `.opencode/agents/` | checks correctness and verbosity, never edits |
 | `notes/.opencode/agents/audit.md` | `.opencode/agents/` | read-only audit: runs vault-audit.py and controlla-perdite.py |
@@ -303,6 +303,12 @@ after `*.md` so that the last matching rule wins). `pdftoppm` (creates images) a
 `split-notes.py --write` (creates notes) ask for confirmation. Both
 configurations set `"external_directory": {"*": "deny"}`: the agent never leaves
 the folder it was started in.
+
+**MCP pooling and `mcp.use`.** The `obsidian-search` MCP server is declared with
+`"pool": true` so one connection is shared across sessions with the same setup
+(shared MCP connections, OpenCode 2.2+), reducing process overhead and startup
+time. The new `mcp.use` permission action is granted for `obsidian-search*` to
+the writing and review agents, replacing the older `mcp:` resource prefix.
 
 **`esercizi/` is yours.** The `esercizi/` folder of every course holds the code
 you write (`.py`, `.html`, `.sql`). It is an input just like the slides: the agent

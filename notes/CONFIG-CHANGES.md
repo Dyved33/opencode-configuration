@@ -22,3 +22,21 @@
 
 ### To do (not yet applied)
 - Evaluate `piagentsync` (synchronize configuration between vaults). `echoes-vault-opencode` NOT added: it does not optimize tokens, rather it adds persistent context.
+
+## v2.1 — alignment with David's vault and OpenCode 2.2.x (2026-11-09)
+
+### opencode.json
+- Added `"pool": true` to the `obsidian-search` MCP server: shared MCP connection across sessions (OpenCode 2.2.x).
+- Added `{ "action": "mcp.use", "resource": "obsidian-search*", "effect": "allow" }` permission: new v2 action replacing the old `mcp:` resource prefix.
+
+### Skills (new)
+- `note-sintesi`: mandatory dense final summary `> [!info] Sintesi:` (3-6 points), no introductions or closures, no repeated information. Applied together with `note-quality` before closing a note.
+
+### Files synchronized with David's vault
+- `.opencode/style.md` (content from vault's `stile.md`): note style, single source loaded at every session.
+- `.opencode/rules.md` (content from vault's `regole.md`): writing discipline, no filler text, one idea per block.
+- `.opencode/dcp.jsonc`: context pruning (deduplication, error purge).
+- `.opencode/rate-limit-fallback.json`: ordered zero-cost fallback chain, stops when exhausted.
+
+### Commands and agents
+- Already aligned with David's vault: `/lezione`, `/rivedi`, `/revisore`, `/revisione`, `/close-note`, `/slide`, `/dividi`, `/libro`; agents `appunti`, `revisore`, `audit`.
