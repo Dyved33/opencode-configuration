@@ -30,16 +30,14 @@ Notes are only inside `first semester/`: search, grep and index there, not in th
 6. **No frontmatter and no tags.**
 7. **Sources.** First the teacher's material, then the web to complete. If they contradict each other, the teacher wins and leave a `[!todo]`.
 8. **Git read-only.** Commits and pushes are done by the user.
-9. **Final summary.** Close every job with at most 5 lines: files touched, what you added, corrected and removed, `[!todo]` left.
-10. **Stop on loops.** If the same action fails after two equivalent attempts (even with different input) or brings no progress or after a timeout, stop and ask the user instead of retrying. Another attempt adds cost, not certainty. No parallel tesseract.
-11. **Textbooks.** Books are in `libri/<Course name>.pdf`, one per course, and read with `python3 .opencode/scripts/books.py` (command `/book`). A note is complete without the book: it is a complement, not a default source. Take nothing from the book without the user's consent: at the end of the lesson ask once, with the `question` tool, whether to integrate it as a complement; if they say no, the book stays out. When you use it, rules 2 and 7 apply.
+9. **Stop on loops.** If the same action fails after two equivalent attempts (even with different input) or brings no progress or after a timeout, stop and ask the user instead of retrying. Another attempt adds cost, not certainty. No parallel tesseract.
+10. **Final chapter from the book.** If a textbook exists for the course in `libri/` and there is relevant content to add on the lesson's topics, add a final chapter to the note with information from the book about the arguments covered. The note is complete without the book: it is a complement, not a default source.
 
 ## Tools
 
 | What | How |
 |---|---|
 | Read slides and PDFs | `python3 .opencode/scripts/read-slides.py FILE [pages]` (image pages are read with Docling/OCR) |
-| Read a textbook | `python3 .opencode/scripts/books.py` with `list`, `info FILE`, `index FILE`, `page FILE 28`, `search FILE "text"` (command `/book`) |
 | Search a lesson by topic | MCP server `obsidian-search` (tool `search`), or `python3 .opencode/scripts/vault-audit.py` for structure |
 | Photo of a slide | ask the user whether to take it (`pdftoppm*` asks for confirmation); if yes: `pdftoppm -png -r 150 -f N -l N "FILE" "images/slide"` and read the description with `tesseract "images/slide-NN.png" stdout -l it`; if no: move on |
 | Structural check | `python3 .opencode/scripts/vault-audit.py [path]` |
