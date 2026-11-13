@@ -1,96 +1,99 @@
-# OpenCode guide for this vault
+# Guida a OpenCode in questo vault
 
-## Launch
+## Avvio
 
-OpenCode is launched from the general notes folder, the one containing `opencode.json`:
+OpenCode va avviato dalla cartella generale degli appunti, quella che contiene `opencode.json`:
 
 ```bash
-cd path/to/notes/folder
+cd percorso/della/cartella/appunti
 opencode
 ```
 
-OpenCode 2 automatically rereads `opencode.json` and files in `.opencode/` when they change; if an agent, command or plugin does not update, use `/reload` or restart.
+OpenCode 2 rilegge automaticamente `opencode.json` e i file in `.opencode/` quando cambiano; se un agent, un command o un plugin non si aggiorna, usa `/reload` oppure riavvia.
 
-## How it is organized
+## Come è organizzato
 
-| File | Purpose |
+| File | A cosa serve |
 |---|---|
-| `AGENTS.md` | the few rules that always apply. Read every session |
-| `.opencode/style.md` | how notes are written. Loaded every session |
-| `.opencode/rules.md` | summary of the two writing skills, loaded every session |
-| `.opencode/agents/` | `notes` for writing and `reviewer` selectable as primary or callable as subagent |
-| `.opencode/plugins/free-model-router/` | enables all free models, disables paid ones and chooses the default; sends no probe requests |
-| `.opencode/commands/` | the 8 commands |
-| `.opencode/scripts/` | the 5 scripts: slide reader, book reader, structural check, loss check, single-file splitter |
-| `.opencode/dcp.jsonc` | how the DCP plugin prunes session context |
-| `~/.config/opencode/rate-limit-fallback.json` | single fallback model chain, shared between projects |
-| `opencode.json` | models, plugins, permissions, MCP server and context compaction |
-| `prompt_chat.md` | prompts for use outside OpenCode (Antigravity, web chat) |
-| `books/` | textbooks, one PDF per course (`books/<Course name>.pdf`); read with `books.py` (command `/book`); complement, not default source |
-| `<Course>/esercizi/` | code written by you (input): the agent does not touch it |
-| `rollback/`, `.review/` | not notes: old single files and review work. Searches are done in `first semester/` |
+| `AGENTS.md` | le poche regole che valgono sempre. Viene letto a ogni sessione |
+| `.opencode/stile.md` | come vanno scritte le note. Viene caricato a ogni sessione |
+| `.opencode/regole.md` | sintesi delle due skill di scrittura, caricata a ogni sessione |
+| `.opencode/agents/` | `appunti` per scrittura e `revisore` selezionabile come primario o invocabile come subagent |
+| `.opencode/plugins/free-model-router/` | abilita tutti i modelli gratuiti, disabilita quelli a pagamento e sceglie il default; non invia richieste di prova |
+| `.opencode/commands/` | i 7 command |
+| `.opencode/scripts/` | i 5 script: lettura slide, lettura libri, controllo strutturale, controllo perdite, divisione dei file unici |
+| `.opencode/dcp.jsonc` | come il plugin DCP pota il contesto della sessione |
+| `~/.config/opencode/rate-limit-fallback.json` | unica catena dei modelli di riserva, condivisa tra i progetti |
+| `opencode.json` | modelli, plugin, permessi, server MCP e compattazione del contesto |
+| `prompt_chat.md` | prompt da usare fuori da OpenCode (Antigravity, chat web) |
+| `libri/` | i libri di testo, un PDF per corso (`libri/<Nome corso>.pdf`); si leggono con `libri.py` (command `/libro`); complemento, non fonte di default |
+| `<Corso>/esercizi/` | il codice scritto da te (input): l'agent non lo tocca |
+| `rollback/`, `.review/` | non sono note: i vecchi file monolitici e i lavori di revisione. Le ricerche vanno fatte in `primo semestre/` |
 
-To change note style, modify only `.opencode/style.md`.
+Per cambiare lo stile delle note si modifica solo `.opencode/stile.md`.
 
-## Models
+## I modelli
 
-There is no fixed model in `opencode.json`: the local plugin enables all free models in the current catalog and disables paid ones. The `preferred` list in `.opencode/plugins/free-model-router/index.ts` only serves to choose the default: it is no longer a whitelist. The plugin sends no probe requests. The catalog does not expose remaining credits or real-time health: these errors depend on the fallback.
+Non c'è un modello fisso in `opencode.json`: il plugin locale abilita tutti i modelli gratuiti del catalogo corrente e disabilita quelli a pagamento. La lista `preferred` in `.opencode/plugins/free-model-router/index.ts` serve solo a scegliere il default: non è più una whitelist. Il plugin non invia richieste di prova. Il catalogo non espone crediti residui o stato di salute in tempo reale: questi errori dipendono dal fallback.
+I modelli free senza supporto ai tool restano visibili, ma non vengono scelti come default.
 
-Free models without tool support remain visible but are not chosen as default.
-
-| Model | Purpose |
+| Modello | A che cosa serve |
 |---|---|
-| `opencode/nemotron-3.5-super-vl-free` | default: writes and reviews notes; supports images and documents |
-| `opencode/nemotron-3-ultra-free` | second choice, disciplined in tool use; context compaction |
-| `opencode/glm-5.3-flash-free` | session title and `plan` agent; flash model, suitable for short tasks |
-| `openrouter/*:free` | 21 OpenRouter `:free` models, all visible and selectable |
-| `ollama/*` | 15 local models, last resort offline and without quota (GTX 1050 GPU) |
+| `opencode/nemotron-3.5-super-vl-free` | default: scrive e rivede le note; supporta anche immagini e documenti |
+| `opencode/nemotron-3-ultra-free` | seconda scelta, disciplinata nell'uso dei tool; compattazione del contesto |
+| `opencode/glm-5.3-flash-free` | titolo della sessione e agent `plan`; modello flash, adatto ai compiti brevi |
+| `openrouter/*:free` | 21 modelli OpenRouter `:free`, tutti visibili e selezionabili |
+| `ollama/*` | 15 modelli locali, ultima risorsa offline e senza quota (GPU GTX 1050) |
 
-The OpenCode free tier does not ask for credentials. OpenRouter asks for one (already saved). Other free providers can be added with `bash ~/.config/opencode/scripts/connect-free-providers.sh`: for each provider the command prints the link to create the key and then asks for it.
+Il free tier di OpenCode non chiede credenziali. OpenRouter ne chiede una (già salvata). Gli altri provider gratuiti si possono aggiungere con `bash ~/.config/opencode/scripts/connect-free-providers.sh`: per ogni provider il comando stampa il link per creare la key e poi la chiede.
 
-Free models and their limits change. Nemotron 3.5 Super VL Free is temporarily free and its NVIDIA endpoint may log requests to improve models: do not send personal or reserved data.
+I modelli gratuiti e i relativi limiti cambiano. Nemotron 3.5 Super VL Free è temporaneamente gratuito e il suo endpoint NVIDIA può registrare le richieste per migliorare i modelli: non inviare dati personali o riservati.
 
-The default applies to new sessions. You can change model with `/models` for the current session; the plugin reapplies the default at the next one. With all free models visible you can also choose a model outside the fallback chain.
+Il default vale per le nuove sessioni. Puoi cambiare modello con `/models` per la sessione corrente; il plugin riapplica il default alla successiva. Con tutti i free visibili puoi scegliere anche un modello fuori dalla catena di fallback.
 
-## Native skills (loaded on demand)
+## Skill native (caricate on-demand)
 
-Writing rules are divided into two levels:
+Le regole di scrittura sono divise su due livelli:
 
-- **`.opencode/rules.md`** (530 tokens): operational summary, loaded every session in the static context. Must be read and applied always.
-- **`.opencode/skills/`**: complete skills, loaded only when needed with the `skill` tool. They do not weigh on the static context.
+- **`.opencode/regole.md`** (530 token): sintesi operativa, caricata a ogni sessione nel contesto statico. Va letta e applicata sempre.
+- **`.opencode/skills/`**: skill complete, caricate solo quando servono con il tool `skill`. Non pesano sul contesto statico.
 
-| Skill | File | When to use |
+| Skill | File | Quando si usa |
 |---|---|---|
-| `no-ai-slop` | `.opencode/skills/no-ai-slop/SKILL.md` | before writing or reviewing a note, to avoid AI-style words and formulas |
-| `i-have-adhd` | `.opencode/skills/i-have-adhd/SKILL.md` | before writing or reviewing a note, for layout (one idea per block, lists instead of prose) |
-| `note-quality` | `.opencode/skills/note-quality/SKILL.md` | before closing a note, to verify nothing of the teacher is lost and style is correct |
+| `no-ai-slop` | `.opencode/skills/no-ai-slop/SKILL.md` | prima di scrivere o rivedere una nota, per evitare parole e formule da stile IA |
+| `i-have-adhd` | `.opencode/skills/i-have-adhd/SKILL.md` | prima di scrivere o rivedere una nota, per l'impaginazione (un'idea per blocco, elenchi invece della prosa) |
+| `note-quality` | `.opencode/skills/note-quality/SKILL.md` | prima di chiudere una nota, per verificare che nulla del docente sia perso e che lo stile sia corretto |
+| `opencode-compact` | `.opencode/skills/opencode-compact/SKILL.md` | per comprimere trascrizioni o testi grezzi lunghi riducendo l'uso di token |
+| `opencode-qa` | `.opencode/skills/opencode-qa/SKILL.md` | per generare callout di domande e risposte di autoverifica per l'esame |
 
-The two skills already present in `~/.agents/skills/` and `~/.config/opencode/vendor/` remain valid as global reference; those in `.opencode/skills/` are the project version.
+Le due skill già presenti in `~/.agents/skills/` e `~/.config/opencode/vendor/` restano valide come riferimento globale; quelle in `.opencode/skills/` sono la versione di progetto.
 
 ## Per-agent MCP tools
 
-The MCP server `obsidian-search` is no longer global: its tool schema is sent only to agents that need it (`notes` and `reviewer`). In other turns the static context is lighter. If another agent needs semantic search, ask to add it to the `agent` section of `opencode.json`.
+I server MCP non sono globali per tutti i turni: il loro schema tool viene inviato solo agli agenti autorizzati (`appunti` e `revisore`). Negli altri turni il contesto statico rimane leggero:
 
-## New plugins
+- **`obsidian-search`**: ricerca semantica locale nel vault su porta 8848 (protocollo sicuro `https://`).
+- **`fetch`**: server MCP locale (`mcp-server-fetch`) per estrarre documentazioni ufficiali online, RFC e pagine web convertite direttamente in Markdown compatto, senza residui HTML.
 
-| Plugin | Purpose | Status |
+## Nuovi plugin
+
+| Plugin | Scopo | Stato |
 |---|---|---|
-| `opencode-parser` | OCR and parsing of images and documents | installed |
-| `@tarquinen/opencode-dcp` | Context pruning and call deduplication | installed, tuned in `.opencode/dcp.jsonc` |
-| `@plannotator/opencode` | Interactive plan with Plannotator | installed |
-| `@azumag/opencode-rate-limit-fallback` | Automatic fallback to secondary model | installed, version 2.1.1 |
-
-To install a missing plugin:
+| `opencode-parser` | OCR e parsing di immagini e documenti | già installato |
+| `@tarquinen/opencode-dcp` | Potatura del contesto e deduplica chiamate | già installato, tarato in `.opencode/dcp.jsonc` |
+| `@plannotator/opencode` | Piano interattivo con Plannotator | già installato |
+| `@azumag/opencode-rate-limit-fallback` | Fallback automatico su modello secondario | già installato, versione 2.1.1 |
+Per installare un plugin mancante:
 
 ```bash
-opencode plugin add <plugin-name>
+opencode plugin add <nome-plugin>
 ```
 
-Then restart OpenCode.
+Poi riavvia OpenCode.
 
-## Automatic fallback
+## Il fallback automatico
 
-For errors recognized by the plugin (429, quota exhausted, transient errors), the request tries the next model in the chain. When the chain ends it stops, without restarting in a loop (`fallbackMode: "stop"`). A generic `504 Gateway Timeout` is not guaranteed to be recognized: the timeout limits the wait, but does not guarantee fallback passage. The unique configuration is `~/.config/opencode/rate-limit-fallback.json`; do not create copies in the vault:
+Per gli errori riconosciuti dal plugin (429, quota esaurita, errori transitori), la richiesta prova il modello successivo della catena. Quando finisce la catena si ferma, senza ripartire in ciclo (`fallbackMode: "stop"`). Un `504 Gateway Timeout` generico non è garantito che venga riconosciuto: il timeout limita l'attesa, ma non assicura il passaggio al fallback. La configurazione unica è `~/.config/opencode/rate-limit-fallback.json`; non creare copie nel vault:
 
 ```
 opencode/nemotron-3.5-super-vl-free
@@ -106,268 +109,267 @@ openrouter/openrouter/free
 ollama/qwen2.5:3b
 ```
 
-The passage preserves the active agent, session and context and follows the static order above. After a complete passage without a usable model, the request stops: it does not restart in a loop and does not wait for an hour. Models chosen manually but absent from the chain are retried on the same model after the cooldown (`otherModels: "wait"`, 30 seconds, with increasing backoff).
+Il passaggio conserva l'agente attivo, la sessione e il contesto e segue l'ordine statico qui sopra. Dopo un passaggio completo senza un modello utilizzabile, la richiesta si ferma: non riparte in ciclo e non resta in attesa fino a un'ora. I modelli scelti manualmente ma assenti dalla catena vengono ritentati sullo stesso modello dopo il cooldown (`otherModels: "wait"`, 30 secondi, con backoff crescente).
 
-`openrouter/openrouter/free` is OpenRouter's free router: it chooses a compatible free model only within OpenRouter. The plugin's ranking is a curated preference, not a measure of quality or current quota; local models are at the bottom because they can be slower. The chain is managed by the `@azumag/opencode-rate-limit-fallback@2.1.1` plugin.
+`openrouter/openrouter/free` è il router gratuito di OpenRouter: sceglie un modello gratuito compatibile solo dentro OpenRouter. La classifica del plugin è una preferenza curata, non una misura di qualità o quota corrente; i modelli locali sono in fondo perché possono essere più lenti. La catena è gestita dal plugin `@azumag/opencode-rate-limit-fallback@2.1.1`.
 
-## Tokens and context
+## Token e contesto
 
-Each request carries the static context (rules, style, agent prompt) and resends it every turn; the growing part is the conversation. Numbers for this vault:
+Ogni richiesta porta con sé il contesto statico (regole, stile, prompt dell'agente) e lo reinvia a ogni turno; la parte che cresce è la conversazione. I numeri di questo vault:
 
-- static context: ~6.8k tokens per request (was ~11.9k: the two skills were replaced by `.opencode/rules.md`, 530 tokens);
-- a long session (157 messages) had processed 13M tokens: now the DCP plugin prunes history above 120k tokens and leaves the last 3 turns intact.
+- contesto statico: ~6,8k token per richiesta (era ~11,9k: le due skill sono state sostituite da `.opencode/regole.md`, 530 token);
+- una sessione lunga (157 messaggi) aveva processato 13M token: adesso il plugin DCP pota la cronologia sopra 120k token e lascia intatti gli ultimi 3 turni.
 
-Practical rules:
+Regole pratiche:
 
-1. **One session per lesson.** History is the main expense: `/compact` or a new session cuts more than any other setting.
-2. **The most disciplined model is also the cheapest.** The default makes 4 tool calls where another makes 22: tokens grow with calls.
-3. **`title` and `compaction` use dedicated free models.** Title uses `glm-5.3-flash-free`, compaction `nemotron-3-ultra-free`. Ollama remains the last resort: on this machine `qwen2.5:3b` responds in a few seconds with the GTX 1050 GPU, but local models are slower than hosted free ones.
+1. **Una sessione per lezione.** La cronologia è la spesa principale: `/compact` o una sessione nuova taglia più di qualunque altra impostazione.
+2. **Il modello più disciplinato è anche il più economico.** Il default fa 4 chiamate di strumento dove un altro ne fa 22: i token crescono con le chiamate.
+3. **`title` e `compaction` usano modelli free dedicati.** Il titolo usa `glm-5.3-flash-free`, la compattazione `nemotron-3-ultra-free`. Ollama resta l'ultima risorsa: su questa macchina `qwen2.5:3b` risponde in pochi secondi con la GPU GTX 1050, ma i modelli locali sono più lenti dei free hosted.
 
-## Loops
+## I cicli
 
-A loop is the agent repeating the same thing and consuming tokens without progressing. Three defenses:
+Un ciclo è l'agente che ripete la stessa cosa e consuma token senza progredire. Tre difese:
 
-- `doom_loop` is denied in `opencode.json`: after three identical calls OpenCode blocks the repetition;
-- rule 10 of `AGENTS.md` requires stopping after two equivalent attempts and asking, instead of retrying;
-- DCP warns the model before context fills (`iterationNudgeThreshold`), and deduplicates identical calls already made.
+- `doom_loop` è negato in `opencode.json`: dopo tre chiamate identiche OpenCode blocca la ripetizione;
+- la regola 10 di `AGENTS.md` impone di fermarsi dopo due tentativi equivalenti e di chiedere, invece di riprovare;
+- DCP avvisa il modello prima che il contesto si riempia (`iterationNudgeThreshold`), e deduplica le chiamate identiche già fatte.
 
-In practice free models have not looped: zero identical repeated calls in all tests. The real problem is another: the model repeating a search with different words (e.g. the old `minimax-m3.1-flash-free` made 22 calls for a search that `nemotron` does in 4; it is no longer in the catalog) spends tokens without adding anything. If you see it, choose the most disciplined model for that task.
+Nella pratica i modelli free non sono andati in loop: zero chiamate identiche ripetute in tutti i test. Il problema reale è un altro: il modello che ripete una ricerca con parole diverse (per esempio il vecchio `minimax-m3.1-flash-free` faceva 22 chiamate per una ricerca che `nemotron` fa in 4; non è più nel catalogo) spende token senza aggiungere nulla. Se lo vedi, scegli il modello più disciplinato per quel task.
 
-## How free models behave
+## Come si comportano i modelli free
 
-Measured on the same tasks, free models are not interchangeable:
+Misurati sugli stessi compiti, i modelli free non sono intercambiabili:
 
-| Model | Tool calls | Quality | What to watch out for |
+| Modello | Strumenti usati | Qualità | A cosa fare attenzione |
 |---|---|---|---|
-| `opencode/nemotron-3-ultra-free` | 4 | good, disciplined | searches well, does not invent |
-| `opencode/deepseek-v4.1-flash-free` | 9 | good | searches in wrong folders |
-| `opencode/glm-5.3-flash-free` | 10 | fair | contradicts itself, repeats a path |
-| `openrouter/thinkingmachines/inkling:free` | 4 | fair | says it did things it did not do |
+| `opencode/nemotron-3-ultra-free` | 4 | buona, disciplinata | cerca bene, non inventa |
+| `opencode/deepseek-v4.1-flash-free` | 9 | buona | cerca nelle cartelle sbagliate |
+| `opencode/glm-5.3-flash-free` | 10 | discreta | si contraddice, ripete un path |
+| `openrouter/thinkingmachines/inkling:free` | 4 | discreta | dice di aver fatto cose che non ha fatto |
 
-`minimax-m3.1-flash-free` is no longer in the catalog: it was used in early tests and remains cited only as a comparison term. Models added later (`nemotron-3.5-super-vl-free`, `nemotron-3.5-lightning-free`, OpenRouter Nemotron free models) do not yet have a row in this table.
+`minimax-m3.1-flash-free` non è più nel catalogo: era usato nei primi test e resta citato solo come termine di paragone. I modelli aggiunti dopo (`nemotron-3.5-super-vl-free`, `nemotron-3.5-lightning-free`, i Nemotron free di OpenRouter) non hanno ancora una riga in questa tabella.
 
-One thing to keep in mind when writing requests: **if you ask a free model to "write the text of X" it may interpret it as "write X into the file"**. The default does not do this, but if it happens: `git diff` and `git restore "path"` to undo, as usual.
+Una cosa da tenere presente quando scrivi le richieste: **se chiedi "scrivi il testo di X" a un modello free, può interpretarlo come "scrivi X nel file"**. Il default non lo fa, ma se succede: `git diff` e `git restore "percorso"` per annullare, come al solito.
 
-## Lesson flow
+## Il flusso di una lezione
 
-1. You create the note in the course folder (e.g. `Lesson 3-Automata on stack.md`). In the same folder put the raw notes (`.txt`, one per lesson), slides and in `images/` the images.
-2. Write in the note what you have, with placeholders `// ... //` where needed.
-3. To plan without modifying, select `plan`: Plannotator shows the plan and the agent cannot modify notes. After approval pass to `notes` to execute the work. For normal requests `notes` does not open Plannotator.
-4. At the end of the lesson launch `/lesson`: completes the note, asks whether to integrate the textbook from `books/` as a complement, writes the final summary, runs the reviewer once and applies corrections.
+1. Crei tu la nota nella cartella del corso (es. `Lezione 3-Automi a pila.md`). Nella stessa cartella metti gli appunti grezzi (`.txt`, uno per lezione), le slide e, in `images/`, le immagini.
+2. Scrivi nella nota quello che hai, con i segnaposto `// ... //` dove serve.
+3. Per pianificare senza modifiche seleziona `plan`: Plannotator mostra il piano e l'agente non può modificare le note. Dopo l'approvazione passa ad `appunti` per eseguire il lavoro. Per le richieste normali `appunti` non apre Plannotator.
+4. A lezione conclusa lanci `/lezione`: completa la nota, ti chiede se integrare il libro di testo di `libri/` come complemento, scrive la sintesi finale, fa passare il revisore una volta e applica le correzioni.
 
-## Nothing is lost
+## Niente si perde
 
-The rule is rule 2 of `AGENTS.md`: everything that is in your notes, in the raw notes and in the slides remains in the note; the agent removes only words. A written rule is not enough, because a model can err: for this the check is done by a script.
+La regola è la 2 di `AGENTS.md`: tutto ciò che sta nei tuoi appunti, negli appunti grezzi e nelle slide resta nella nota; l'agent toglie solo parole. Una regola scritta però non basta, perché un modello può sbagliare: per questo il controllo lo fa uno script.
 
-1. Before modifying a note the agent saves a copy in `.opencode/originali/`;
-2. at the end `check-losses.py` compares the note with the copy, with raw notes and with slides, and lists what it does not find: formulas, code lines, images, numbers, text lines, slide pages. Code linked by a wikilink (in `esercizi/`) counts as part of the note;
-3. for each item the agent rereads the source and puts back what is missing.
+1. prima di modificare una nota l'agent ne salva una copia in `.opencode/originali/`;
+2. alla fine `controlla-perdite.py` confronta la nota con la copia, con gli appunti grezzi e con le slide, ed elenca ciò che non ritrova: formule, righe di codice, immagini, numeri, righe di testo, pagine delle slide. Anche il codice collegato da un wikilink (in `esercizi/`) conta come parte della nota;
+3. per ogni voce l'agent rilegge la fonte e rimette ciò che manca.
 
-The script compares words, not meanings, and does not check image-only slides: after `/review` it is worth running it manually and checking `git diff` on important notes.
+Lo script confronta parole, non significati, e non controlla le slide fatte di sole immagini: dopo `/rivedi` conviene lanciarlo anche a mano e guardare `git diff` sulle note importanti.
 
-## Agents
+## Gli agent
 
-| Agent | What it does | How to use |
+| Agent | Cosa fa | Come si usa |
 |---|---|---|
-| `notes` | writes and modifies notes. It is active at launch | just write the request |
-| `reviewer` | checks a note (correctness, completeness, verbosity) and returns the list of corrections. Does not modify anything | primary selectable and subagent; starts with `/lesson`, or manually with `@reviewer` or `/reviewer` |
-| `audit` | read-only structural check: runs `vault-audit.py` and `check-losses.py` and returns a report | call manually |
+| `appunti` | scrive e modifica le note. È quello attivo all'avvio | basta scrivere la richiesta |
+| `revisore` | controlla una nota (correttezza, completezza, verbosità) e restituisce l'elenco delle correzioni. Non modifica nulla | primario selezionabile e subagent; parte con `/lezione`, oppure a mano con `@revisore` o `/revisore` |
 
-## Commands
+## I command
 
-**`/lesson`** closes a lesson note. The first path is the note, the others are raw notes or material; if missing it looks for them in the same folder.
-
-```
-/lesson "First semester/Languages/Lesson 3-Automata on stack.md"
-/lesson "First semester/Languages/Lesson 3-Automata on stack.md" "First semester/Languages/automata.pdf"
-```
-
-It understands by itself which case it is in:
-- the note already has text: it integrates it (placeholders, errors, missing parts) without rewriting it;
-- the note is empty and there is a `.txt`: it writes it from raw notes;
-- the note is empty and there is only material: it writes it from slides.
-
-**`/review`** reviews a note and applies corrections: errors, missing parts, cuts. It is the command to condense verbose notes: removes words, not content, and has no length limit to reach. On a folder it works on one note at a time and stops after each.
+**`/lezione`** chiude la nota di una lezione. Il primo percorso è la nota, gli altri sono appunti grezzi o materiale; se mancano li cerca nella stessa cartella.
 
 ```
-/review "First semester/OS/Lesson 5-Semaphores, Messages.md"
-/review "First semester/OS/Lesson 5-Semaphores, Messages.md" solo report     # does not modify anything
-/review diff                                            # notes modified and not yet in a commit
+/lezione "Primo semestre/Linguaggi/Lezione 3-Automi a pila.md"
+/lezione "Primo semestre/Linguaggi/Lezione 3-Automi a pila.md" "Primo semestre/Linguaggi/automi.pdf"
 ```
 
-**`/reviewer`** runs the reviewer on a note without modifying it: returns the corrections list (report-only). Useful to check a note at any time.
+Capisce da solo in quale caso si trova:
+- la nota ha già del testo: la integra (segnaposto, errori, parti mancanti) senza riscriverla;
+- la nota è vuota e c'è un `.txt`: la scrive dagli appunti grezzi;
+- la nota è vuota e c'è solo il materiale: la scrive dalle slide.
+
+**`/rivedi`** fa revisionare una nota e applica le correzioni: errori, parti mancanti, tagli. È il comando per asciugare le note verbose: toglie parole, non contenuti, e non ha un limite di lunghezza da raggiungere. Su una cartella lavora una nota alla volta e si ferma dopo ognuna.
 
 ```
-/reviewer "First semester/OS/Lesson 5-Semaphores, Messages.md"
+/rivedi "Primo semestre/SO/Lezione 5-Semafori, Messaggi.md"
+/rivedi "Primo semestre/SO/Lezione 5-Semafori, Messaggi.md" solo report     # non modifica nulla
+/rivedi diff                                            # le note modificate e non ancora in un commit
 ```
 
-**`/audit`** runs the structural check and reports the result. Does not modify anything.
+**`/revisore`** lancia il revisore su una nota senza modificarla: restituisce l'elenco delle correzioni (report-only). Utile per far controllare una nota in qualsiasi momento.
 
 ```
-/audit                              # whole vault
-/audit "First semester/Languages"   # one course
+/revisore "Primo semestre/SO/Lezione 5-Semafori, Messaggi.md"
 ```
 
-Finds: broken links, missing images, formulas and code blocks not closed, unbalanced `<div>`, wrong callouts, unresolved placeholders, lessons missing from index, missing final summary, frontmatter and tags, off-convention titles, AI-style phrases, open `[!todo]`, very long paragraphs.
-
-**`/close-note`** runs loss check, structure check and reviewer in sequence on a single note, returning a unified report. Does not modify anything: if something needs fixing, use `/review` afterwards.
+**`/revisione`** esegue il controllo strutturale e ne riporta il risultato. Non modifica nulla.
 
 ```
-/close-note "First semester/OS/Lesson 5-Semaphores, Messages.md"
-/close-note "First semester/OS/Lesson 5-Semaphores, Messages.md" "First semester/OS/semaphores.pdf"
+/revisione                              # tutto il vault
+/revisione "Primo semestre/Linguaggi"   # un corso
 ```
 
-What it does, in order:
+Trova: link rotti, immagini mancanti, formule e blocchi di codice non chiusi, `<div>` non bilanciati, callout sbagliati, segnaposto non risolti, lezioni che mancano nell'indice, sintesi finale mancante, frontmatter e tag, titoli fuori convenzione, frasi tipiche da IA, `[!todo]` aperti, paragrafi molto lunghi.
 
-1. Saves a backup copy of the note in `.opencode/originali/`;
-2. Runs `check-losses.py` and reports formulas, code, images, numbers and source lines not found in the note;
-3. Runs `vault-audit.py --breve` and reports ERROR and WARN;
-4. Calls the subagent `reviewer` and reports [ERROR], [MISSING], [CUT], [STYLE], [FORM];
-5. Closes with a judgment: `Note correct` / `To correct: N errors` / `To complete: N missing items`.
-
-Use it when you have finished writing a note and want to verify nothing was lost before considering it closed.
-
-**`/slide`** shows the text of a material page, to check with your own eyes.
+**`/chiudi-nota`** esegue in sequenza controllo perdite, controllo strutturale e revisore su una singola nota, restituendo un report unificato. Non modifica nulla: se qualcosa va sistemato, usa poi `/rivedi`.
 
 ```
-/slide "First semester/Languages/automata.pdf" 28
-/slide "First semester/Languages/automata.pdf" 19-21
-/slide "First semester/Languages/automata.pptx" --search "stack empty"
+/chiudi-nota "Primo semestre/SO/Lezione 5-Semafori, Messaggi.md"
+/chiudi-nota "Primo semestre/SO/Lezione 5-Semafori, Messaggi.md" "Primo semestre/SO/semafori.pdf"
 ```
 
-**`/book`** reads a textbook from `books/`: list of books, summary, one page or text search. The book remains a complement of the note, to be used only with your consent (rule 11 of `AGENTS.md`).
+Cosa fa, in ordine:
+
+1. Salva una copia di sicurezza della nota in `.opencode/originali/`;
+2. Esegue `controlla-perdite.py` e segnala formule, codice, immagini, numeri e righe del materiale non ritrovate nella nota;
+3. Esegue `vault-audit.py --breve` e segnala ERROR e WARN;
+4. Chiama il subagent `revisore` e segnala [ERRORE], [MANCA], [TAGLIA], [STILE], [FORMA];
+5. Chiude con un giudizio: `Nota corretta` / `Da correggere: N errori` / `Da completare: N perdite`.
+
+Usalo quando hai finito di scrivere una nota e vuoi verificare che nulla sia stato perso prima di considerarla chiusa.
+
+**`/slide`** mostra il testo di una pagina del materiale, per controllare con i propri occhi.
 
 ```
-/book list
-/book "books/Introduction to Security.pdf" index
-/book "books/Introduction to Security.pdf" page 28
-/book "books/Introduction to Security.pdf" search "firewall"
+/slide "Primo semestre/Linguaggi/automi.pdf" 28
+/slide "Primo semestre/Linguaggi/automi.pdf" 19-21
+/slide "Primo semestre/Linguaggi/automi.pptx" --cerca "pila vuota"
 ```
 
-**`/split`** divides a single raw notes file into one note per lesson. Use once only, for notes written so far.
+**`/libro`** legge un libro di testo di `libri/`: elenco dei libri, sommario, una pagina o la ricerca di un testo. Il libro resta un complemento della nota, da usare solo col tuo consenso (regola 11 di `AGENTS.md`).
 
 ```
-/split "First semester/OS/OS theory notes.md"
-/split "First semester/OS/OS theory notes.md" --per-section
+/libro elenco
+/libro "libri/Introduzione sicurezza.pdf" indice
+/libro "libri/Introduzione sicurezza.pdf" pagina 28
+/libro "libri/Introduzione sicurezza.pdf" cerca "firewall"
 ```
 
-It shows the plan first and writes only after your confirmation. See below.
-
-Paths with spaces always go in quotes.
-
-## Migrating old notes to the new format
-
-1. `/split "path/Notes course.md"`. The script cuts the file on `###` titles and uses the hidden date in image names only to group consecutive sections: the date does not end up in file names nor in the index. Text is copied identically, it does not pass through the model.
-2. Check the plan. Groups follow images, so they are indicative: sections without images remain separate groups and must be merged manually if needed.
-3. Confirm: creates the notes and index in the same folder. The single file remains intact: archive or delete it yourself after checking.
-4. If a title or name does not suit you, rename the file from Obsidian: index links update automatically.
-5. `/review` one note at a time. Each pass condenses, adds the final summary and reports words before and after.
-
-## What to write in notes
-
-**Placeholders.** Outside code blocks, `// ... //` is an instruction for the agent, to execute at that point:
+**`/dividi`** divide un file unico di appunti in una nota per lezione. Serve una volta sola, per gli appunti scritti finora.
 
 ```
-// slide 28 //                         report slide 28 content here
-// def automaton on stack //           search the definition in the material
-// deepen with an example //           any other request
+/dividi "Primo semestre/SO/Appunti teoria SO.md"
+/dividi "Primo semestre/SO/Appunti teoria SO.md" --per-sezione
 ```
 
-The placeholder disappears when it has been executed. If the agent cannot execute it, it replaces it with a `[!todo]`.
+Mostra prima il piano e scrive solo dopo la tua conferma. Vedi sotto.
 
-**Images.** After the image the layout is indicated:
+I percorsi con spazi vanno sempre tra virgolette.
+
+## Passare i vecchi appunti al nuovo formato
+
+1. `/dividi "percorso/Appunti corso.md"`. Lo script taglia il file sui titoli `###` e usa la data nascosta nei nomi delle immagini solo per raggruppare le sezioni consecutive: la data non finisce nei nomi dei file né nell'indice. Il testo viene copiato identico, non passa dal modello.
+2. Controlla il piano. I gruppi seguono le immagini, quindi sono indicativi: le sezioni senza immagini restano gruppi a sé e vanno unite a mano se serve.
+3. Conferma: crea le note e l'indice nella stessa cartella. Il file unico resta intatto: archivialo o cancellalo tu quando hai controllato.
+4. Se un titolo o un nome non ti va, rinomina il file da Obsidian: i link dell'indice si aggiornano da soli.
+5. `/rivedi` su una nota alla volta. Ogni passata asciuga, aggiunge la sintesi finale e riporta le parole prima e dopo.
+
+## Cosa scrivere nelle note
+
+**Segnaposto.** Fuori dai blocchi di codice, `// ... //` è un'istruzione per l'agent, da eseguire in quel punto:
 
 ```
-![[x.png]]                        no placeholder: agent asks (resized to 300 if you don't care)
-![[x.png]] // adatta //           adapted to page width
-![[x.png]] // sotto: testo //     with text below
-![[x.png]] // lato: testo //      with text beside
-![[x.png]] // lato //             beside goes the following paragraph
+// slide 28 //                         riporta qui il contenuto della slide 28
+// def automa a pila //                cerca la definizione nel materiale
+// approfondire con un esempio //      qualsiasi altra richiesta
 ```
 
-If you don't write a placeholder, the agent asks which layout to use, one question per image. The text for the text below or text beside comes from OCR or the agent asks you, and if you don't write it falls back to resizing.
+Il segnaposto sparisce quando è stato eseguito. Se l'agent non ci riesce lo sostituisce con un `[!todo]`.
 
-Inside a callout the image remains `![[x.png|300]]`. The model does not see images: it never describes what they show unless your text or OCR says so.
+**Immagini.** Dopo l'immagine si indica il layout:
 
-**Todo.** `> [!todo] what to review` marks a point to check. The agent tries to close them at every pass and leaves new ones when unsure. `/audit` lists them all.
+```
+![[x.png]]                        senza segnaposto: l'agent chiede (ridimensionata a 300 se non ti importa)
+![[x.png]] // adatta //           adattata alla larghezza della pagina
+![[x.png]] // sotto: testo //     con scritta sotto
+![[x.png]] // lato: testo //      con testo a lato
+![[x.png]] // lato //             a lato va il paragrafo che segue
+```
 
-**Summary.** Every note closes with `> [!info] Summary:`, 3 to 6 points. It is written by the agent with `/lesson` and `/review`.
+Se non scrivi un segnaposto, l'agent ti chiede quale layout usare, una domanda per immagine. Il testo per la scritta sotto o per il testo a lato viene dall'OCR o te lo chiede lui, e se non lo scrivi ripiega su un ridimensionamento.
 
-**Code.** The snippet that serves theory remains in the note, in a block ```` ``` ````. Exercises and complete solutions are in `esercizi/`, with the name you choose: in the note only the relevant piece remains, with the wikilink `[[esercizi/es3.py|es3]]`. `esercizi/` files are yours: the agent does not open them for writing and, if you ask for an exercise, it gives it in the answer and you save it.
+Dentro un callout l'immagine resta `![[x.png|300]]`. Il modello non vede le immagini: non descrive mai cosa mostrano, a meno che non lo dica il tuo testo o l'OCR.
 
-## What OpenCode can and cannot do
+**Todo.** `> [!todo] cosa va rivisto` segna un punto da controllare. L'agent prova a chiuderli a ogni passata e ne lascia di nuovi quando non è sicuro di qualcosa. `/revisione` li elenca tutti.
 
-- Writes only `.md` files. Cannot modify `AGENTS.md`, files in `.opencode/` nor anything in `esercizi/`.
-- Does not create notes: you create them and it fills them. It can create only the course index. The only exception is `/split`, which asks for confirmation.
-- Does not touch `.txt`, PDFs, slides, images and `esercizi/` files. Does not execute code.
-- Does not leave the vault.
-- In the terminal it can run only the five scripts (also `books.py`), `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext`, read-only git commands and `obsidian-mcp-search` status commands. For `pdftoppm` (which creates images) it asks for confirmation. Image slide reading with Docling happens inside `read-slides.py`.
-- Can search the web.
-- Does not commit or push: they remain yours.
+**Sintesi.** Ogni nota si chiude con `> [!info] Sintesi:`, da 3 a 6 punti. La scrive l'agent con `/lezione` e `/rivedi`.
 
-These restrictions are not only written: they are enforced by the `permissions` block of `opencode.json`. `edit` denies everything except `.md`, with explicit denial for `AGENTS.md`, `.opencode/**`, `esercizi/`, `opencode.json`, `CONFIG-CHANGES.md` and the two `prompt/` files; `bash` denies everything except the allowlist commands above; `external_directory` prevents leaving the vault.
+**Codice.** Lo snippet che serve alla teoria resta nella nota, in un blocco ```` ``` ````. Gli esercizi e le soluzioni complete stanno in `esercizi/`, col nome che dai tu: nella nota resta solo il pezzo rilevante con il wikilink `[[esercizi/es3.py|es3]]`. I file di `esercizi/` sono tuoi: l'agent non li apre in scrittura e, se gli chiedi un esercizio, te lo dà nella risposta e lo salvi tu.
 
-## Scripts, also manually
+## Cosa OpenCode può fare e cosa no
+
+- Scrive solo file `.md`. Non può modificare `AGENTS.md`, i file in `.opencode/` né nulla in `esercizi/`.
+- Non crea note: le crei tu e lui le riempie. Può creare solo l'indice del corso. L'unica eccezione è `/dividi`, che chiede conferma.
+- Non tocca `.txt`, PDF, slide, immagini e i file in `esercizi/`. Non esegue codice.
+- Non esce dal vault.
+- Nel terminale può eseguire solo i cinque script (anche `libri.py`), `ls`, `grep`, `rg`, `wc`, `pdfinfo`, `pdftotext`, i comandi git di sola lettura e i comandi di stato del server `obsidian-mcp-search`. Per `pdftoppm` (che crea immagini) chiede conferma. La lettura delle slide immagine con Docling avviene dentro `leggi-slide.py`.
+- Può cercare sul web.
+- Non fa commit né push: restano a te.
+
+Queste restrizioni non sono solo scritte: sono imposte dal blocco `permissions` di `opencode.json`. `edit` nega tutto tranne i `.md`, con diniego esplicito per `AGENTS.md`, `.opencode/**`, `esercizi/`, `opencode.json`, `CONFIG-CHANGES.md` e i due file di `prompt/`; `bash` nega tutto tranne i comandi in allowlist qui sopra; `external_directory` gli impedisce di uscire dal vault.
+
+## Gli script, anche a mano
 
 ```bash
-python3 .opencode/scripts/read-slides.py FILE              # list of pages
-python3 .opencode/scripts/read-slides.py FILE 28           # one page
-python3 .opencode/scripts/read-slides.py FILE --search "x"  # where x appears
-python3 .opencode/scripts/books.py list                    # present books and associated course
-python3 .opencode/scripts/books.py index FILE              # book summary
-python3 .opencode/scripts/books.py page FILE 28            # one book page
-python3 .opencode/scripts/books.py search FILE "x"         # where x appears in the book
-python3 .opencode/scripts/vault-audit.py "First semester/Languages"
-python3 .opencode/scripts/vault-audit.py --breve           # only ERROR and WARN
-python3 .opencode/scripts/check-losses.py NOTE --save       # copy before modifying
-python3 .opencode/scripts/check-losses.py NOTE               # what was lost compared to copy
-python3 .opencode/scripts/check-losses.py NOTE --with SOURCE  # compared to a .txt or slides
-python3 .opencode/scripts/split-notes.py FILE           # division plan
-python3 .opencode/scripts/split-notes.py FILE --write  # creates the notes
+python3 .opencode/scripts/leggi-slide.py FILE              # elenco delle pagine
+python3 .opencode/scripts/leggi-slide.py FILE 28           # una pagina
+python3 .opencode/scripts/leggi-slide.py FILE --cerca "x"  # dove compare x
+python3 .opencode/scripts/libri.py elenco                  # libri presenti e corso associato
+python3 .opencode/scripts/libri.py indice FILE             # sommario del libro
+python3 .opencode/scripts/libri.py pagina FILE 28          # una pagina del libro
+python3 .opencode/scripts/libri.py cerca FILE "x"          # dove compare x nel libro
+python3 .opencode/scripts/vault-audit.py "Primo semestre/Linguaggi"
+python3 .opencode/scripts/vault-audit.py --breve           # solo ERROR e WARN
+python3 .opencode/scripts/controlla-perdite.py NOTA --salva       # copia prima di modificare
+python3 .opencode/scripts/controlla-perdite.py NOTA               # cosa si è perso rispetto alla copia
+python3 .opencode/scripts/controlla-perdite.py NOTA --con FONTE   # rispetto a un .txt o alle slide
+python3 .opencode/scripts/dividi-appunti.py FILE           # piano di divisione
+python3 .opencode/scripts/dividi-appunti.py FILE --scrivi  # crea le note
 ```
 
-`read-slides.py` reads PDF, PPTX and PPT (PPTs are converted with LibreOffice into a temporary folder). If a PDF is made of image pages, text is automatically read with Docling (OCR); on long files the fallback is skipped, to avoid taking too long, and the script reports it: in that case the page is viewed as a photo. With `READ_SLIDES_DOCLING_FORZA=1` Docling is forced even on long files.
+`leggi-slide.py` legge PDF, PPTX e PPT (i PPT li converte con LibreOffice in una cartella temporanea). Se un PDF è fatto di pagine immagine, il testo viene letto automaticamente con Docling (OCR); sui file lunghi il fallback viene saltato, per non impiegare troppo tempo, e lo script lo segnala: in quel caso la pagina si guarda come foto. Con `LEGGI_SLIDE_DOCLING_FORZA=1` si forza Docling anche sui file lunghi.
 
-## opencode-parser plugin
+## Il plugin opencode-parser
 
-Adds the `parse` tool, which extracts text from PDF, Word, PowerPoint and, with OCR, from images. Installed globally as `opencode-parser@2.0.1`, compatible with OpenCode 2; it does not create or insert images. Here it serves to read text inside a screenshot (`parse` with OCR in Italian). For slides and PDFs the agent uses `read-slides.py`, because `parse` returns the document from the beginning and not a specific page.
+Aggiunge il tool `parse`, che estrae il testo da PDF, Word, PowerPoint e, con l'OCR, dalle immagini. È installato globalmente come `opencode-parser@2.0.1`, compatibile con OpenCode 2; non crea né inserisce immagini. Qui serve per leggere il testo dentro uno screenshot (`parse` con OCR in italiano). Per slide e PDF l'agent usa `leggi-slide.py`, perché `parse` restituisce il documento dall'inizio e non una pagina precisa.
 
-## Semantic search (obsidian-search server)
+## La ricerca semantica (server obsidian-search)
 
-Notes also have a search by meaning, not just exact word: asking "where is traffic protection discussed" finds the firewall lesson even if the word "firewall" is not in the question. It is done by the MCP server `obsidian-search` (`opencode.json`, `mcp` section), which indexes `first semester/` notes with a multilingual embedding model and searches them on `http://127.0.0.1:8848/mcp`. It exposes four tools: `list_vaults`, `search`, `read_note`, `reindex`.
+Nelle note c'è anche una ricerca per significato, non solo per parola esatta: chiedendo "dove si parla di protezione del traffico" trova la lezione sui firewall anche se la parola "firewall" non è nella domanda. La fa il server MCP `obsidian-search` (`opencode.json`, sezione `mcp`), che indicizza le note di `primo semestre/` con un modello di embedding multilingua e le cerca su `http://127.0.0.1:8848/mcp`. Espone quattro tool: `list_vaults`, `search`, `read_note`, `reindex`.
 
-The server is a user systemd service (`~/.config/systemd/user/obsidian-mcp-search.service`), so it starts alone at boot. Useful commands:
+Il server è un servizio systemd utente (`~/.config/systemd/user/obsidian-mcp-search.service`), quindi parte da solo all'avvio. Comandi utili:
 
 ```bash
-systemctl --user status obsidian-mcp-search     # status
-systemctl --user restart obsidian-mcp-search    # restart (reloads index)
-obsidian-mcp-search status                      # indexed notes and blocks
+systemctl --user status obsidian-mcp-search     # stato
+systemctl --user restart obsidian-mcp-search    # riavvio (ricarica l'indice)
+obsidian-mcp-search status                      # note e blocchi indicizzati
 ```
 
-The index updates automatically when a note changes (watcher). The model and indexed notes are in the cache folder `~/.cache/obsidian-mcp-search/`. The agent uses it only to find linked lessons, not to read the file to modify.
+L'indice si aggiorna da solo quando una nota cambia (watcher). Il modello e le note indicizzate sono nella cartella di cache in `~/.cache/obsidian-mcp-search/`. L'agente lo usa solo per trovare le lezioni collegate, non per leggere il file da modificare.
 
-## Context compaction
+## La compattazione del contesto
 
-When the conversation lengthens, OpenCode summarizes old parts alone to free space in the model context window. In `opencode.json` the `compaction` section sets:
+Quando la conversazione si allunga, OpenCode riassume da solo le parti vecchie per liberare spazio nella finestra di contesto del modello. In `opencode.json` la sezione `compaction` imposta:
 
-- `auto: true` — compacts automatically when context is full (default: `true`);
-- `keep.tokens: 12000` — keeps a more compact summary, reducing context resent in subsequent turns.
+- `auto: true` — compatta automaticamente quando il contesto è pieno (default: `true`);
+- `keep.tokens: 12000` — conserva un riassunto più compatto, riducendo il contesto reinviato nei turni successivi.
 
-There are also `reserved` (reserve tokens for compaction) and `preserve_recent_tokens` (recent tokens to keep). There is no fixed cadence "every N messages": compaction starts when context fills, and a summary at intervals would require a plugin calling `session.summarize`.
+Ci sono anche `reserved` (token di riserva per la compattazione) e `preserve_recent_tokens` (token recenti da conservare). Non esiste una cadenza fissa "ogni N messaggi": la compattazione parte quando il contesto si riempie, e un riassunto a intervalli richiederebbe un plugin che chiami `session.summarize`.
 
-The summary is done by the model indicated in `agents.compaction` (`opencode/nemotron-3-ultra-free`, 1M token window): the model must be able to keep the note in mind, not summarize it in pieces.
+Il riassunto lo fa il modello indicato in `agents.compaction` (`opencode/nemotron-3-ultra-free`, finestra da 1M token): il modello deve poter tenere la nota in testa, non risumerla a pezzi.
 
-Added to this is the DCP plugin, which prunes context as the session proceeds instead of waiting for compaction. It is tuned in `.opencode/dcp.jsonc`: it prunes also in subagent sessions, leaves the last 3 turns intact, warns the model before context fills and deduplicates identical calls. Its values take precedence over global ones in `~/.config/opencode/dcp.jsonc`.
+A questo si aggiunge il plugin DCP, che pota il contesto mentre la sessione prosegue invece di aspettare la compattazione. È tarato in `.opencode/dcp.jsonc`: pota anche nelle sessioni dei subagenti, lascia intatti gli ultimi 3 turni, avvisa il modello prima che il contesto si riempia e deduplica le chiamate identiche. I suoi valori hanno la precedenza su quelli globali in `~/.config/opencode/dcp.jsonc`.
 
-## When something goes wrong
+## Quando qualcosa va storto
 
-- **A plugin does not load:** check OpenCode version and plugin form. OpenCode 1.x plugins (form `{ id, server }`) do not load on 2.x (which accepts `{ id, effect }` or `{ id, setup }`): this is the case of `@omniroute/opencode-plugin`, removed from `opencode.json` awaiting 0.3.x.
-- **A provider replies 401 "Missing Authentication header":** the saved credential is not the right one. Check with `opencode auth list` and reconnect with `opencode auth login <provider>`.
-- **429 does not pass to the next model:** check the chain in `rate-limit-fallback.json`; if the failing model is not in the chain, with `otherModels: "wait"` the plugin retries it on the same model after cooldown, does not pass to another.
-- **A command with a pipe is denied:** OpenCode checks permissions for every command in the chain, even `| head`. Missing rules are added in `opencode.json`, `permissions` section, as `shell` + `allow`, after the generic `deny` rule.
-- **Agent or command do not appear:** run `/reload`; if not enough, restart OpenCode.
-- **OpenCode does not start due to configuration error:** `OPENCODE_DISABLE_PROJECT_CONFIG=1 opencode`, correct and restart. To see the configuration OpenCode really loaded: `opencode debug config`.
-- **The agent wrote too much or ruined a note:** `git diff` shows what changed, `git restore "path"` returns the note to the last commit. Without git, the previous version is in `.opencode/originali/`. It is advisable to commit before `/review` and `/split`.
-- **An image in a `<div>` is not visible:** check that the name in `src` is identical to the file name. If it is correct and still not visible, see `LEGGIMI.md`.
-- **Vague requests:** "improve the note" produces a random rewrite. Better "the semaphore section is too long, condense it" or a placeholder in the right point.
-- **Ollama:** on this machine there is a NVIDIA GTX 1050 GPU; small models (`qwen2.5:3b`, `qwen2.5:1.5b`) respond in a few seconds. Do not use 7b models for frequent tasks: they do not fit in 4 GB VRAM and remain on CPU.
+- **Un plugin non si carica:** controlla la versione di OpenCode e la forma del plugin. I plugin di OpenCode 1.x (forma `{ id, server }`) non si caricano sulla 2.x (che accetta `{ id, effect }` o `{ id, setup }`): è il caso di `@omniroute/opencode-plugin`, tolto da `opencode.json` in attesa della 0.3.x.
+- **Un provider risponde 401 "Missing Authentication header":** la credenziale salvata non è quella giusta. Controlla con `opencode auth list` e ricollega con `opencode auth login <provider>`.
+- **Il 429 non passa al modello successivo:** guarda la catena in `rate-limit-fallback.json`; se il modello che fallisce non è in catena, con `otherModels: "wait"` il plugin lo ritenta sullo stesso modello dopo il cooldown, non passa a un altro.
+- **Un comando con la pipe viene negato:** OpenCode controlla i permessi per ogni comando della catena, anche `| head`. Le regole che mancano si aggiungono in `opencode.json`, sezione `permissions`, come `shell` + `allow`, dopo la regola `deny` generica.
+- **Agent o command non compaiono:** esegui `/reload`; se non basta, riavvia OpenCode.
+- **OpenCode non parte per un errore di configurazione:** `OPENCODE_DISABLE_PROJECT_CONFIG=1 opencode`, correggi e riavvia. Per vedere la configurazione che OpenCode ha davvero caricato: `opencode debug config`.
+- **L'agent ha scritto troppo o ha rovinato una nota:** `git diff` mostra cosa è cambiato, `git restore "percorso"` riporta la nota all'ultimo commit. Senza git, la versione di prima è in `.opencode/originali/`. Conviene fare un commit prima di `/rivedi` e di `/dividi`.
+- **Un'immagine in un `<div>` non si vede:** controlla che il nome in `src` sia identico a quello del file. Se è giusto e non si vede lo stesso, vedi `LEGGIMI.md`.
+- **Richieste vaghe:** "migliora la nota" produce una riscrittura a caso. Meglio "la sezione sui semafori è troppo lunga, asciugala" oppure un segnaposto nel punto giusto.
+- **Ollama:** su questa macchina c'è una GPU NVIDIA GTX 1050; i modelli piccoli (`qwen2.5:3b`, `qwen2.5:1.5b`) rispondono in pochi secondi. Non usare i modelli 7b per compiti frequenti: non entrano nei 4 GB di VRAM e restano su CPU.
